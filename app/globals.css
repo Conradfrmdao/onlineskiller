@@ -1,0 +1,150 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Inter", "Aptos", "Segoe UI", Arial, sans-serif;
+  --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.65);
+  --radius-md: calc(var(--radius) * 0.85);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.35);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  --background: #f4f7fb;
+  --foreground: #071426;
+  --card: #ffffff;
+  --card-foreground: #071426;
+  --popover: #ffffff;
+  --popover-foreground: #071426;
+  --primary: #1769ff;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf1ff;
+  --secondary-foreground: #102a56;
+  --muted: #edf1f6;
+  --muted-foreground: #657086;
+  --accent: #f5b82e;
+  --accent-foreground: #261800;
+  --destructive: #dc2626;
+  --border: #dce3ed;
+  --input: #dce3ed;
+  --ring: color-mix(in oklab, #1769ff 40%, transparent);
+  --radius: 0.8rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body {
+    max-width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    overflow-wrap: break-word;
+    background:
+      radial-gradient(circle at 8% -5%, rgba(23, 105, 255, 0.13), transparent 30%),
+      radial-gradient(circle at 94% 5%, rgba(245, 184, 46, 0.12), transparent 25%),
+      linear-gradient(180deg, #ffffff 0%, #f4f7fb 44%, #edf3fb 100%);
+    background-attachment: fixed;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+}
+
+@layer utilities {
+  @keyframes card-shuffle-out {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    55% {
+      opacity: 1;
+      transform: translate(76%, -7%) rotate(10deg) scale(1.02);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(18%, 12%) rotate(3deg) scale(0.9);
+    }
+  }
+
+  @keyframes card-timer {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .site-grid {
+    background-image:
+      linear-gradient(rgba(7, 20, 38, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(7, 20, 38, 0.045) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: linear-gradient(180deg, black, transparent 95%);
+  }
+
+  .dashboard-bg {
+    background:
+      radial-gradient(circle at 14% 0%, rgba(23, 105, 255, 0.1), transparent 32%),
+      linear-gradient(180deg, #fbfdff, #f1f5fa);
+  }
+
+  .panel {
+    @apply border border-slate-200/90 bg-white/95 shadow-[0_24px_70px_-52px_rgba(7,20,38,0.38)] backdrop-blur-xl;
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(100deg, #071426 10%, #1769ff 62%, #d89500);
+    background-clip: text;
+    color: transparent;
+  }
+
+  .blueprint-card {
+    background:
+      linear-gradient(rgba(255,255,255,.96), rgba(255,255,255,.96)) padding-box,
+      linear-gradient(135deg, rgba(23,105,255,.6), rgba(245,184,46,.45)) border-box;
+    border: 1px solid transparent;
+  }
+}
