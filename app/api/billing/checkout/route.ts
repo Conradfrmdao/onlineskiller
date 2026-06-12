@@ -6,6 +6,7 @@ import { payments } from "@/db/schema";
 import { requireCreatorApi } from "@/lib/auth/user";
 import { getCheckoutPrice } from "@/lib/billing/checkout-pricing";
 import { getBillingGateway } from "@/lib/billing/gateway.registry";
+import { isCheckoutPaymentMethod } from "@/lib/billing/payment-methods";
 import { getPlan, isPlanName } from "@/lib/billing/plans";
 import { db } from "@/lib/db";
 import { createMerchantReference } from "@/lib/utils/slugs";
@@ -29,9 +30,10 @@ export async function POST(request: Request) {
   const { user, profile } = await requireCreatorApi();
   const formData = await request.formData();
   const planName = String(formData.get("plan") || "");
+  const requestedPaymentMethod = String(formData.get("paymentMethod") || "");
   const recurring = formData.get("recurring") === "on";
 
-  if (!isPlanName(planName)) {
+  if (!isPlanName(planName) || !isCheckoutPaymentMethod(requestedPaymentMethod)) {
     return NextResponse.redirect(new URL("/dashboard/billing?error=plan", request.url), 303);
   }
 
@@ -52,9 +54,10 @@ export async function POST(request: Request) {
       creatorId: profile.id,
       merchantReference,
       planName,
-      amountCents: checkoutPrice.amountCents,
+      amount: checkoutPrice.amount,
       currency: checkoutPrice.currency,
       provider,
+      requestedPaymentMethod,
       isRecurring: recurring,
       status: "pending",
     })
@@ -70,11 +73,12 @@ export async function POST(request: Request) {
     const result = await gateway.createCheckout({
       merchantReference,
       planName,
-      amountCents: checkoutPrice.amountCents,
+      amount: checkoutPrice.amount,
       currency: checkoutPrice.currency,
       description: `${plan.label} monthly subscription for OnlineSkiller`,
       callbackUrl,
       notificationId: process.env.PESAPAL_IPN_ID,
+      requestedPaymentMethod,
       recurring,
       customer: {
         email: user.email || clerkUser?.emailAddresses[0]?.emailAddress || "",
@@ -92,6 +96,7 @@ export async function POST(request: Request) {
         providerPayload: {
           ...result.raw,
           redirectUrl: result.redirectUrl,
+          requestedPaymentMethod,
         },
         updatedAt: new Date(),
       })

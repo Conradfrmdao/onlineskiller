@@ -46,9 +46,10 @@ export async function applyVerifiedPayment(
           providerTrackingId: verification.providerTrackingId,
           providerSubscriptionId: verification.providerSubscriptionId || payment.providerSubscriptionId,
           planName: payment.planName,
-          amountCents: payment.amountCents,
+          amount: payment.amount,
           currency: payment.currency,
           provider: payment.provider,
+          requestedPaymentMethod: payment.requestedPaymentMethod,
           isRecurring: true,
           status: "pending",
           providerPayload: verification.raw,
@@ -74,8 +75,8 @@ export async function applyVerifiedPayment(
 
     if (
       verification.status === "completed" &&
-      verification.amountCents !== undefined &&
-      verification.amountCents !== payment.amountCents
+      verification.amount !== undefined &&
+      Math.abs(verification.amount - payment.amount) > 0.001
     ) {
       await tx
         .update(payments)

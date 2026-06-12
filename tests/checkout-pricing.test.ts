@@ -6,7 +6,7 @@ import { PLANS } from "@/lib/billing/plans";
 describe("checkout pricing", () => {
   it("uses canonical USD plan pricing outside test mode", () => {
     expect(resolveCheckoutPrice(PLANS.starter)).toEqual({
-      amountCents: 2000,
+      amount: 20,
       currency: "USD",
       isTestPrice: false,
     });
@@ -20,7 +20,7 @@ describe("checkout pricing", () => {
     });
 
     expect(price).toEqual({
-      amountCents: 50000,
+      amount: 500,
       currency: "UGX",
       isTestPrice: true,
     });

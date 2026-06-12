@@ -3,7 +3,7 @@ export type PlanName = "starter" | "growth" | "pro";
 export type Plan = {
   name: PlanName;
   label: string;
-  priceCents: number;
+  priceUsd: number;
   livePageLimit: number | null;
   premiumTemplates: boolean;
   premiumMarketing: boolean;
@@ -17,7 +17,7 @@ export const PLANS: Record<PlanName, Plan> = {
   starter: {
     name: "starter",
     label: "Starter",
-    priceCents: 2000,
+    priceUsd: 20,
     livePageLimit: 1,
     premiumTemplates: false,
     premiumMarketing: false,
@@ -29,7 +29,7 @@ export const PLANS: Record<PlanName, Plan> = {
   growth: {
     name: "growth",
     label: "Growth",
-    priceCents: 3500,
+    priceUsd: 35,
     livePageLimit: 5,
     premiumTemplates: true,
     premiumMarketing: true,
@@ -41,7 +41,7 @@ export const PLANS: Record<PlanName, Plan> = {
   pro: {
     name: "pro",
     label: "Pro",
-    priceCents: 5000,
+    priceUsd: 50,
     livePageLimit: null,
     premiumTemplates: true,
     premiumMarketing: true,
@@ -69,5 +69,5 @@ export function formatPlanPrice(plan: Plan) {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(plan.priceCents / 100);
+  }).format(plan.priceUsd);
 }

@@ -15,9 +15,10 @@ export class MockBillingGateway implements BillingGateway {
     callback.searchParams.set("OrderMerchantReference", input.merchantReference);
     const checkout = new URL("/billing/mock-checkout", input.callbackUrl);
     checkout.searchParams.set("callback", callback.toString());
-    checkout.searchParams.set("amount", String(input.amountCents));
+    checkout.searchParams.set("amount", String(input.amount));
     checkout.searchParams.set("currency", input.currency);
     checkout.searchParams.set("plan", input.planName);
+    checkout.searchParams.set("method", input.requestedPaymentMethod);
 
     return {
       provider: this.name,
@@ -26,6 +27,7 @@ export class MockBillingGateway implements BillingGateway {
       raw: {
         mock: true,
         recurring: input.recurring,
+        requestedPaymentMethod: input.requestedPaymentMethod,
       },
     };
   }

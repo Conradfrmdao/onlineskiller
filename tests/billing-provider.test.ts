@@ -16,11 +16,12 @@ describe("billing providers", () => {
     const checkout = await gateway.createCheckout({
       merchantReference: "OS-TEST",
       planName: "starter",
-      amountCents: 2000,
+      amount: 20,
       currency: "USD",
       description: "Test",
       callbackUrl: "http://localhost:3000/api/billing/callback",
       recurring: false,
+      requestedPaymentMethod: "card",
       customer: { email: "creator@example.com", firstName: "Test", lastName: "Creator" },
     });
     expect(checkout.providerTrackingId).toBe("MOCK-OS-TEST");

@@ -60,7 +60,7 @@ export class PesapalBillingGateway implements BillingGateway {
     const payload: Record<string, unknown> = {
       id: input.merchantReference,
       currency: input.currency,
-      amount: input.amountCents / 100,
+      amount: input.amount,
       description: input.description,
       callback_url: input.callbackUrl,
       notification_id: input.notificationId,
@@ -133,7 +133,8 @@ export class PesapalBillingGateway implements BillingGateway {
       throw new Error(`Pesapal verification failed with HTTP ${response.status}.`);
     }
 
-    const amount = typeof result.amount === "number" ? Math.round(result.amount * 100) : undefined;
+    const currency = result.currency === "UGX" ? "UGX" : result.currency === "USD" ? "USD" : undefined;
+    const amount = typeof result.amount === "number" ? result.amount : undefined;
     const merchantReference =
       typeof result.merchant_reference === "string" ? result.merchant_reference : "";
 
@@ -141,8 +142,8 @@ export class PesapalBillingGateway implements BillingGateway {
       status: mapPesapalStatus(result.status_code as number | string | null),
       providerTrackingId,
       merchantReference,
-      amountCents: amount,
-      currency: typeof result.currency === "string" ? result.currency : undefined,
+      amount,
+      currency,
       paymentMethod:
         typeof result.payment_method === "string" ? result.payment_method : undefined,
       providerStatus:

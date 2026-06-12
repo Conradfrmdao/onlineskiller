@@ -1,9 +1,10 @@
 import type { Plan } from "@/lib/billing/plans";
+import { formatMoney, type BillingCurrency } from "@/lib/billing/money";
 
-export type BillingCurrency = "USD" | "UGX";
+export type { BillingCurrency } from "@/lib/billing/money";
 
 export type CheckoutPrice = {
-  amountCents: number;
+  amount: number;
   currency: BillingCurrency;
   isTestPrice: boolean;
 };
@@ -22,14 +23,14 @@ export function resolveCheckoutPrice(
       : 500;
 
     return {
-      amountCents: Math.round(amount * 100),
+      amount,
       currency: options.testCurrency || "UGX",
       isTestPrice: true,
     };
   }
 
   return {
-    amountCents: plan.priceCents,
+    amount: plan.priceUsd,
     currency: "USD",
     isTestPrice: false,
   };
@@ -46,10 +47,5 @@ export function getCheckoutPrice(plan: Plan) {
 }
 
 export function formatCheckoutPrice(price: CheckoutPrice) {
-  return new Intl.NumberFormat("en-UG", {
-    style: "currency",
-    currency: price.currency,
-    currencyDisplay: "code",
-    maximumFractionDigits: price.currency === "UGX" ? 0 : 2,
-  }).format(price.amountCents / 100);
+  return formatMoney(price.amount, price.currency);
 }

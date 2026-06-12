@@ -1,14 +1,16 @@
 import type { PlanName } from "@/lib/billing/plans";
-import type { BillingCurrency } from "@/lib/billing/checkout-pricing";
+import type { BillingCurrency } from "@/lib/billing/money";
+import type { CheckoutPaymentMethod } from "@/lib/billing/payment-methods";
 
 export type CheckoutInput = {
   merchantReference: string;
   planName: PlanName;
-  amountCents: number;
+  amount: number;
   currency: BillingCurrency;
   description: string;
   callbackUrl: string;
   notificationId?: string;
+  requestedPaymentMethod: CheckoutPaymentMethod;
   recurring: boolean;
   customer: {
     email: string;
@@ -30,7 +32,7 @@ export type PaymentVerification = {
   status: "pending" | "completed" | "failed" | "canceled";
   providerTrackingId: string;
   merchantReference: string;
-  amountCents?: number;
+  amount?: number;
   currency?: string;
   paymentMethod?: string;
   providerStatus?: string;

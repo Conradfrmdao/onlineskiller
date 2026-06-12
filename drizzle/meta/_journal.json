@@ -15,6 +15,27 @@
       "when": 1780918793102,
       "tag": "0001_far_demogoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781265600698,
+      "tag": "0002_currency_aware_payment_amounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781265991713,
+      "tag": "0003_exact_payment_amounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781266156848,
+      "tag": "0004_remove_legacy_payment_amounts",
+      "breakpoints": true
     }
   ]
 }

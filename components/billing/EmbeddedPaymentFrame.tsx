@@ -7,9 +7,11 @@ import { LoaderCircle, ShieldCheck } from "lucide-react";
 export function EmbeddedPaymentFrame({
   checkoutUrl,
   provider,
+  requestedMethod,
 }: {
   checkoutUrl: string;
   provider: string;
+  requestedMethod: string;
 }) {
   const router = useRouter();
 
@@ -37,7 +39,7 @@ export function EmbeddedPaymentFrame({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <ShieldCheck className="size-4 text-blue-600" />
-          Secure card or mobile money checkout
+          Secure {requestedMethod} checkout
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <LoaderCircle className="size-3.5 animate-spin" />
@@ -52,8 +54,10 @@ export function EmbeddedPaymentFrame({
         referrerPolicy="strict-origin-when-cross-origin"
       />
       <div className="border-t border-slate-200 px-4 py-3 text-center text-xs leading-5 text-slate-500">
-        Payment options are securely provided by {provider === "mock" ? "the OnlineSkiller test gateway" : "our payment partner"}.
-        OnlineSkiller verifies the final transaction status before activating your plan.
+        {provider === "mock"
+          ? "This payment is handled by the OnlineSkiller test gateway."
+          : `You selected ${requestedMethod}. The secure payment form may ask you to confirm the available network or card option.`}
+        {" "}OnlineSkiller verifies the final transaction status before activating your plan.
       </div>
     </div>
   );
