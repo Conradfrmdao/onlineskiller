@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { asc, eq } from "drizzle-orm";
-import { Eye, FilePlus2, Files, MoreHorizontal, Pause, Pencil, Trash2, WalletCards } from "lucide-react";
+import { desc, eq } from "drizzle-orm";
+import { Eye, FilePlus2, Files, LayoutTemplate, Megaphone, MoreHorizontal, Pause, Pencil, Trash2, WalletCards } from "lucide-react";
 
 import { deletePageAction, pausePageAction } from "@/actions/page-actions";
-import { pages } from "@/db/schema";
+import { pages, templates } from "@/db/schema";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +16,12 @@ import { getPageAnalytics } from "@/lib/pages/queries";
 export default async function PagesPage() {
   const { profile } = await requireCreator();
   const creatorPages = await db
-    .select()
+    .select({ page: pages, template: templates })
     .from(pages)
+    .leftJoin(templates, eq(templates.id, pages.templateId))
     .where(eq(pages.creatorId, profile.id))
-    .orderBy(asc(pages.createdAt));
-  const analytics = await Promise.all(creatorPages.map((page) => getPageAnalytics(page.id)));
+    .orderBy(desc(pages.updatedAt));
+  const analytics = await Promise.all(creatorPages.map(({ page }) => getPageAnalytics(page.id)));
 
   return (
     <div className="space-y-8">
@@ -28,7 +29,14 @@ export default async function PagesPage() {
         eyebrow="Page studio"
         title="Your pages"
         description="Create, preview, publish, and measure every offer from one place."
-        actions={<Button asChild><Link href="/dashboard/pages/new"><FilePlus2 /> New page</Link></Button>}
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/dashboard/templates"><LayoutTemplate /> Browse templates</Link>
+            </Button>
+            <Button asChild><Link href="/dashboard/pages/new"><FilePlus2 /> New page</Link></Button>
+          </>
+        }
       />
       {creatorPages.length === 0 ? (
         <EmptyState
@@ -39,14 +47,16 @@ export default async function PagesPage() {
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {creatorPages.map((page, index) => (
+          {creatorPages.map(({ page, template }, index) => (
             <Card key={page.id}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant={page.isLive ? "success" : page.status === "paused" ? "warning" : "secondary"}>{page.status}</Badge>
-                      <span className="text-xs text-slate-500">{page.pageType.replaceAll("-", " ")}</span>
+                      <span className="text-xs text-slate-500">
+                        {page.pageType.replaceAll("-", " ")} · {template?.name || "Default style"}
+                      </span>
                     </div>
                     <h2 className="mt-3 truncate text-lg font-semibold">{page.title}</h2>
                     <p className="mt-1 truncate text-sm text-slate-500">/p/{page.slug}</p>
@@ -67,6 +77,7 @@ export default async function PagesPage() {
                   <Button asChild size="sm"><Link href={`/dashboard/pages/${page.id}/edit`}><Pencil /> Edit</Link></Button>
                   <Button asChild variant="outline" size="sm"><Link href={`/dashboard/pages/${page.id}/payments`}><WalletCards /> Payments</Link></Button>
                   <Button asChild variant="outline" size="sm"><Link href={`/dashboard/pages/${page.id}/preview`}><Eye /> Preview</Link></Button>
+                  <Button asChild variant="outline" size="sm"><Link href="/dashboard/marketing"><Megaphone /> Marketing</Link></Button>
                   {page.isLive ? (
                     <form action={pausePageAction}>
                       <input type="hidden" name="pageId" value={page.id} />

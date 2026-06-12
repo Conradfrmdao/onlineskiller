@@ -18,7 +18,6 @@ export class MockBillingGateway implements BillingGateway {
     checkout.searchParams.set("amount", String(input.amount));
     checkout.searchParams.set("currency", input.currency);
     checkout.searchParams.set("plan", input.planName);
-    checkout.searchParams.set("method", input.requestedPaymentMethod);
 
     return {
       provider: this.name,
@@ -27,7 +26,6 @@ export class MockBillingGateway implements BillingGateway {
       raw: {
         mock: true,
         recurring: input.recurring,
-        requestedPaymentMethod: input.requestedPaymentMethod,
       },
     };
   }

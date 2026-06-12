@@ -6,7 +6,7 @@ import {
   canUsePremiumMarketing,
   canUsePremiumTemplate,
 } from "@/lib/billing/entitlements";
-import { PLANS } from "@/lib/billing/plans";
+import { canPurchasePlan, PLANS } from "@/lib/billing/plans";
 
 describe("plan entitlements", () => {
   it("enforces live page limits", () => {
@@ -26,5 +26,24 @@ describe("plan entitlements", () => {
   it("denies cross-account ownership", () => {
     expect(canAccessOwnedResource("creator-a", "creator-a")).toBe(true);
     expect(canAccessOwnedResource("creator-a", "creator-b")).toBe(false);
+  });
+
+  it("allows inactive creators to choose any plan", () => {
+    expect(canPurchasePlan({ active: false, currentPlan: "starter", targetPlan: "starter" })).toBe(true);
+    expect(canPurchasePlan({ active: false, currentPlan: "starter", targetPlan: "pro" })).toBe(true);
+  });
+
+  it("locks current and lower plans while allowing one scheduled upgrade", () => {
+    expect(canPurchasePlan({ active: true, currentPlan: "starter", targetPlan: "starter" })).toBe(false);
+    expect(canPurchasePlan({ active: true, currentPlan: "growth", targetPlan: "starter" })).toBe(false);
+    expect(canPurchasePlan({ active: true, currentPlan: "growth", targetPlan: "pro" })).toBe(true);
+    expect(
+      canPurchasePlan({
+        active: true,
+        currentPlan: "starter",
+        targetPlan: "growth",
+        scheduledPlanName: "pro",
+      }),
+    ).toBe(false);
   });
 });

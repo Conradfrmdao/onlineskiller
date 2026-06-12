@@ -30,6 +30,29 @@ export function cleanHandle(value: unknown) {
   return value.trim().replace(/^@/, "").replace(/[^a-zA-Z0-9._]/g, "").slice(0, 100);
 }
 
+export function cleanInternalPath(value: unknown, fallback = "/dashboard") {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  const candidate = value.trim();
+  if (
+    !candidate.startsWith("/") ||
+    candidate.startsWith("//") ||
+    candidate.includes("\\") ||
+    candidate.includes("\0")
+  ) {
+    return fallback;
+  }
+
+  try {
+    const url = new URL(candidate, "https://onlineskiller.local");
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
 export function whatsappUrl(phone: string, message = "") {
   const cleanPhone = phone.replace(/\D/g, "");
 

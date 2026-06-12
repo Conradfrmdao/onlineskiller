@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 
 import { creatorProfiles, subscriptions } from "@/db/schema";
 import { requireUser } from "@/lib/auth/user";
-import { addTrialDays } from "@/lib/billing/periods";
 import { db } from "@/lib/db";
 import { onboardingSchema } from "@/lib/validation/onboarding.schema";
 import { slugify } from "@/lib/utils/slugs";
@@ -79,8 +78,7 @@ export async function completeOnboardingAction(
   };
 
   await db.transaction(async (tx) => {
-    const trialStart = new Date();
-    const trialEnd = addTrialDays(trialStart, 7);
+    const now = new Date();
     let creatorId = profile?.id;
 
     if (profile) {
@@ -104,21 +102,21 @@ export async function completeOnboardingAction(
       .insert(subscriptions)
       .values({
         creatorId,
-        status: "trialing",
+        status: "inactive",
         planName: "starter",
         provider: "manual",
-        currentPeriodStart: trialStart,
-        currentPeriodEnd: trialEnd,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
       })
       .onConflictDoUpdate({
         target: subscriptions.creatorId,
         set: {
-          status: "trialing",
+          status: "inactive",
           planName: "starter",
           provider: "manual",
-          currentPeriodStart: trialStart,
-          currentPeriodEnd: trialEnd,
-          updatedAt: trialStart,
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
+          updatedAt: now,
         },
       });
   });

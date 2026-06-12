@@ -21,7 +21,6 @@ describe("billing providers", () => {
       description: "Test",
       callbackUrl: "http://localhost:3000/api/billing/callback",
       recurring: false,
-      requestedPaymentMethod: "card",
       customer: { email: "creator@example.com", firstName: "Test", lastName: "Creator" },
     });
     expect(checkout.providerTrackingId).toBe("MOCK-OS-TEST");

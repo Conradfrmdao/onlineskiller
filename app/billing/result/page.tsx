@@ -5,22 +5,24 @@ import { use, useEffect } from "react";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cleanInternalPath } from "@/lib/utils/urls";
 
 export default function BillingResultPage({
   searchParams,
 }: {
-  searchParams: Promise<{ payment?: string }>;
+  searchParams: Promise<{ payment?: string; returnTo?: string }>;
 }) {
   const params = use(searchParams);
   const status = params.payment || "pending";
   const successful = status === "success";
+  const returnTo = cleanInternalPath(params.returnTo, "/dashboard/billing");
 
   useEffect(() => {
     window.parent.postMessage(
-      { type: "onlineskiller-payment-result", status },
+      { type: "onlineskiller-payment-result", status, returnTo },
       window.location.origin,
     );
-  }, [status]);
+  }, [returnTo, status]);
 
   return (
     <main className="grid min-h-screen place-items-center bg-white px-4 text-center">
@@ -39,7 +41,7 @@ export default function BillingResultPage({
             : "You can return to billing and retry if the payment was not completed."}
         </p>
         <Button asChild className="mt-6">
-          <Link href={`/dashboard/billing?payment=${encodeURIComponent(status)}`}>Return to billing</Link>
+          <Link href={returnTo}>{successful ? "Return to your page" : "Return to billing"}</Link>
         </Button>
       </div>
     </main>

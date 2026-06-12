@@ -52,6 +52,12 @@ export const PLANS: Record<PlanName, Plan> = {
   },
 };
 
+const PLAN_ORDER: Record<PlanName, number> = {
+  starter: 0,
+  growth: 1,
+  pro: 2,
+};
+
 export function isPlanName(value: string): value is PlanName {
   return value === "starter" || value === "growth" || value === "pro";
 }
@@ -62,6 +68,27 @@ export function getPlan(value: string | null | undefined) {
   }
 
   return PLANS[value];
+}
+
+export function isHigherPlan(target: PlanName, current: PlanName) {
+  return PLAN_ORDER[target] > PLAN_ORDER[current];
+}
+
+export function canPurchasePlan(input: {
+  active: boolean;
+  currentPlan: PlanName;
+  targetPlan: PlanName;
+  scheduledPlanName?: string | null;
+}) {
+  if (!input.active) {
+    return true;
+  }
+
+  if (input.scheduledPlanName) {
+    return false;
+  }
+
+  return isHigherPlan(input.targetPlan, input.currentPlan);
 }
 
 export function formatPlanPrice(plan: Plan) {

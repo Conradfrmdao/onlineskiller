@@ -4,14 +4,14 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, ShieldCheck } from "lucide-react";
 
+import { cleanInternalPath } from "@/lib/utils/urls";
+
 export function EmbeddedPaymentFrame({
   checkoutUrl,
   provider,
-  requestedMethod,
 }: {
   checkoutUrl: string;
   provider: string;
-  requestedMethod: string;
 }) {
   const router = useRouter();
 
@@ -21,12 +21,15 @@ export function EmbeddedPaymentFrame({
         return;
       }
 
-      const data = event.data as { type?: string; status?: string };
+      const data = event.data as { type?: string; status?: string; returnTo?: string };
       if (data?.type !== "onlineskiller-payment-result" || !data.status) {
         return;
       }
 
-      router.replace(`/dashboard/billing?payment=${encodeURIComponent(data.status)}`);
+      const returnTo = cleanInternalPath(data.returnTo, "/dashboard/billing");
+      const destination = new URL(returnTo, window.location.origin);
+      destination.searchParams.set("payment", data.status);
+      router.replace(`${destination.pathname}${destination.search}${destination.hash}`);
       router.refresh();
     }
 
@@ -39,7 +42,7 @@ export function EmbeddedPaymentFrame({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <ShieldCheck className="size-4 text-blue-600" />
-          Secure {requestedMethod} checkout
+          Secure card or mobile money checkout
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <LoaderCircle className="size-3.5 animate-spin" />
@@ -56,7 +59,7 @@ export function EmbeddedPaymentFrame({
       <div className="border-t border-slate-200 px-4 py-3 text-center text-xs leading-5 text-slate-500">
         {provider === "mock"
           ? "This payment is handled by the OnlineSkiller test gateway."
-          : `You selected ${requestedMethod}. The secure payment form may ask you to confirm the available network or card option.`}
+          : "Choose any available card or mobile money option in the secure payment form."}
         {" "}OnlineSkiller verifies the final transaction status before activating your plan.
       </div>
     </div>

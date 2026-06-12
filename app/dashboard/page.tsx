@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { count, eq, sql } from "drizzle-orm";
-import { CalendarDays, Eye, FilePlus2, Files, Megaphone, Rocket, Star } from "lucide-react";
+import { count, desc, eq, sql } from "drizzle-orm";
+import { CalendarDays, ClipboardCheck, Eye, FilePlus2, Files, Megaphone, Pencil, Rocket, Star } from "lucide-react";
 
 import {
   contentCalendarItems,
@@ -17,14 +17,24 @@ import { getCreatorEntitlements } from "@/lib/billing/subscription";
 import { db } from "@/lib/db";
 
 const quickActions = [
-  { title: "Create a page", description: "Turn an offer into a focused landing page.", href: "/dashboard/pages/new", icon: FilePlus2 },
-  { title: "Explore templates", description: "Choose a visual direction for your next launch.", href: "/templates", icon: Rocket },
+  { title: "Create a page", description: "Use the guided launch wizard.", href: "/dashboard/pages/new", icon: FilePlus2 },
   { title: "Open marketing", description: "Find hooks, scripts, videos, and practical strategies.", href: "/dashboard/marketing", icon: Megaphone },
+  { title: "Plan this week", description: "Turn your next idea into a calendar item.", href: "/dashboard/calendar", icon: CalendarDays },
+];
+
+const weeklyTasks = [
+  "Share a behind-the-scenes story and invite one reply.",
+  "Post a problem-awareness video that names your customer’s struggle.",
+  "Share a real testimonial or a small proof point.",
+  "Teach one useful tip connected to your offer.",
+  "Post a result, transformation, or lifestyle example.",
+  "Make a direct offer with one clear call to action.",
+  "Answer one frequently asked question publicly.",
 ];
 
 export default async function DashboardPage() {
   const { profile } = await requireCreator();
-  const [entitlements, totalPages, livePages, savedAssets, savedStrategies, calendarItems] = await Promise.all([
+  const [entitlements, totalPages, livePages, savedAssets, savedStrategies, calendarItems, latestPage] = await Promise.all([
     getCreatorEntitlements(profile.id),
     db.select({ total: count() }).from(pages).where(eq(pages.creatorId, profile.id)),
     db
@@ -34,7 +44,10 @@ export default async function DashboardPage() {
     db.select({ total: count() }).from(savedMarketingAssets).where(eq(savedMarketingAssets.creatorId, profile.id)),
     db.select({ total: count() }).from(savedMarketingStrategies).where(eq(savedMarketingStrategies.creatorId, profile.id)),
     db.select({ total: count() }).from(contentCalendarItems).where(eq(contentCalendarItems.creatorId, profile.id)),
+    db.select().from(pages).where(eq(pages.creatorId, profile.id)).orderBy(desc(pages.updatedAt)).limit(1),
   ]);
+  const currentPage = latestPage[0];
+  const todaysTask = weeklyTasks[new Date().getDay()];
 
   const metrics = [
     { label: "All pages", value: totalPages[0]?.total || 0, icon: Files },
@@ -98,26 +111,47 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Your brand base</CardTitle>
-            <CardDescription>These details flow into your public pages.</CardDescription>
+            <CardTitle>{currentPage ? "Your current page" : "Your first launch"}</CardTitle>
+            <CardDescription>{currentPage ? "Continue from the most recently updated offer." : "Start with the guided setup."}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-xl bg-slate-50 p-3">
-              <p className="text-xs text-slate-500">Business</p>
-              <p className="font-semibold">{profile.businessName}</p>
-            </div>
-            <div className="rounded-xl bg-slate-50 p-3">
-              <p className="text-xs text-slate-500">Niche</p>
-              <p className="font-semibold">{profile.niche}</p>
-            </div>
-            <Button asChild variant="outline" className="w-full"><Link href="/dashboard/settings">Edit brand settings</Link></Button>
+            {currentPage ? (
+              <>
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{currentPage.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">/p/{currentPage.slug}</p>
+                    </div>
+                    <Badge variant={currentPage.isLive ? "success" : "secondary"}>{currentPage.status}</Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild size="sm"><Link href={`/dashboard/pages/${currentPage.id}/edit`}><Pencil /> Edit</Link></Button>
+                  <Button asChild variant="outline" size="sm"><Link href={`/dashboard/pages/${currentPage.id}/preview`}><Eye /> Preview</Link></Button>
+                </div>
+              </>
+            ) : (
+              <Button asChild className="w-full"><Link href="/dashboard/pages/new"><Rocket /> Start my page</Link></Button>
+            )}
           </CardContent>
         </Card>
       </section>
 
-      <section>
-        <h2 className="text-lg font-semibold">Quick actions</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 lg:grid-cols-[.7fr_1.3fr]">
+        <Card className="bg-blue-600 text-white">
+          <CardContent className="p-6">
+            <span className="grid size-11 place-items-center rounded-xl bg-white/15"><ClipboardCheck /></span>
+            <p className="mt-8 text-xs font-bold uppercase tracking-[0.16em] text-blue-100">Today’s marketing task</p>
+            <h2 className="mt-3 text-xl font-bold">{todaysTask}</h2>
+            <Button asChild variant="outline" className="mt-6 border-white/20 bg-white/10 text-white hover:bg-white/20">
+              <Link href="/dashboard/marketing">Get content for this</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <div>
+          <h2 className="text-lg font-semibold">Quick actions</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
@@ -128,6 +162,7 @@ export default async function DashboardPage() {
               </Link>
             );
           })}
+          </div>
         </div>
       </section>
     </div>

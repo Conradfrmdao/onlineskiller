@@ -36,6 +36,13 @@
       "when": 1781266156848,
       "tag": "0004_remove_legacy_payment_amounts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781268452527,
+      "tag": "0005_scheduled_subscription_upgrades",
+      "breakpoints": true
     }
   ]
 }

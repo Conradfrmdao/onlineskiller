@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpenCheck,
   CalendarDays,
   CreditCard,
-  FilePlus2,
   Files,
+  LayoutTemplate,
   LayoutDashboard,
   Megaphone,
-  Plug,
   Settings,
   Sparkles,
 } from "lucide-react";
@@ -21,13 +19,11 @@ import { cn } from "@/lib/utils";
 const items = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My pages", href: "/dashboard/pages", icon: Files },
-  { name: "Create page", href: "/dashboard/pages/new", icon: FilePlus2 },
+  { name: "Templates", href: "/dashboard/templates", icon: LayoutTemplate },
   { name: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
-  { name: "Strategies", href: "/dashboard/marketing/strategies", icon: BookOpenCheck },
   { name: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
-  { name: "Integrations", href: "/dashboard/integrations", icon: Plug },
 ];
 
 function isCurrent(pathname: string, href: string) {

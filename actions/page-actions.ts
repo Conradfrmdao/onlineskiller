@@ -19,10 +19,14 @@ import { canPublishAnotherPage } from "@/lib/billing/entitlements";
 import { getPlan } from "@/lib/billing/plans";
 import { getCreatorSubscription } from "@/lib/billing/subscription";
 import { db } from "@/lib/db";
-import { DEFAULT_SECTIONS } from "@/lib/pages/constants";
+import {
+  getLaunchGoal,
+  getStarterSections,
+  resolveLaunchCta,
+} from "@/lib/pages/launch-flow";
+import { getPageSlugAvailability } from "@/lib/pages/slug-availability";
 import { detectVideoProvider } from "@/lib/pages/video-provider";
 import { createPageSchema, sectionSchema, updatePageSchema, videoSchema } from "@/lib/validation/page.schema";
-import { slugify } from "@/lib/utils/slugs";
 import { cleanHttpUrl } from "@/lib/utils/urls";
 
 type ActionState = {
@@ -30,19 +34,17 @@ type ActionState = {
   message: string;
 };
 
-async function uniquePageSlug(value: string, pageId?: string) {
-  const base = slugify(value);
+function isUniqueConstraintError(error: unknown) {
+  let current = error;
 
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const candidate = attempt === 0 ? base : `${base}-${attempt + 1}`.slice(0, 120);
-    const rows = await db.select({ id: pages.id }).from(pages).where(eq(pages.slug, candidate)).limit(1);
-
-    if (!rows[0] || rows[0].id === pageId) {
-      return candidate;
+  for (let depth = 0; depth < 4 && current && typeof current === "object"; depth += 1) {
+    if ("code" in current && current.code === "23505") {
+      return true;
     }
+    current = "cause" in current ? current.cause : null;
   }
 
-  return `${base}-${Date.now().toString(36)}`.slice(0, 120);
+  return false;
 }
 
 async function templateAllowed(templateId: string | undefined, creatorId: string) {
@@ -83,40 +85,89 @@ export async function createPageAction(_state: ActionState, formData: FormData):
     return { success: false, message: error instanceof Error ? error.message : "Template is unavailable." };
   }
 
-  const slug = await uniquePageSlug(parsed.data.slug);
-  const inserted = await db.transaction(async (tx) => {
-    const pageRows = await tx
-      .insert(pages)
-      .values({
-        creatorId: profile.id,
-        title: parsed.data.title,
-        slug,
-        pageType: parsed.data.pageType,
-        templateId: parsed.data.templateId || null,
-        subtitle: `A clear offer from ${profile.businessName}`,
-        description: "Explain the problem you solve, the result you create, and why your approach is worth choosing.",
-      })
-      .returning();
-    const page = pageRows[0];
+  const goal = getLaunchGoal(parsed.data.launchGoal);
+  if (goal.needsDestination && !cleanHttpUrl(parsed.data.ctaDestination)) {
+    return { success: false, message: "Add a valid destination link for your main button." };
+  }
 
-    if (!page) {
-      throw new Error("Page could not be created.");
+  const cta = resolveLaunchCta(
+    parsed.data.launchGoal,
+    parsed.data.ctaDestination,
+    profile,
+    parsed.data.title,
+  );
+  if (!cta.ctaUrl) {
+    return {
+      success: false,
+      message:
+        parsed.data.launchGoal === "whatsapp"
+          ? "Add a WhatsApp number in Settings before using the WhatsApp goal."
+          : "Add an Instagram handle in Settings before using the Instagram goal.",
+    };
+  }
+
+  const slugAvailability = await getPageSlugAvailability(parsed.data.slug);
+  if (!slugAvailability.available) {
+    return {
+      success: false,
+      message: `The address /p/${slugAvailability.slug} is already taken. Choose another one.`,
+    };
+  }
+
+  const slug = slugAvailability.slug;
+  const introVideoUrl = cleanHttpUrl(parsed.data.introVideoUrl);
+  let inserted: typeof pages.$inferSelect;
+
+  try {
+    inserted = await db.transaction(async (tx) => {
+      const pageRows = await tx
+        .insert(pages)
+        .values({
+          creatorId: profile.id,
+          title: parsed.data.title,
+          slug,
+          pageType: parsed.data.pageType,
+          templateId: parsed.data.templateId || null,
+          subtitle: parsed.data.description,
+          description: `Explore ${parsed.data.title} from ${profile.businessName} and take the next clear step.`,
+          category: parsed.data.category,
+          priceText: parsed.data.priceText,
+          ctaText: cta.ctaText,
+          ctaUrl: cta.ctaUrl,
+          whatsappEnabled: cta.whatsappEnabled,
+          introVideoUrl: introVideoUrl || null,
+          introVideoProvider: introVideoUrl ? detectVideoProvider(introVideoUrl) : null,
+        })
+        .returning();
+      const page = pageRows[0];
+
+      if (!page) {
+        throw new Error("Page could not be created.");
+      }
+
+      await tx.insert(pageSections).values(
+        getStarterSections(parsed.data.pageType, parsed.data.title).map((section, index) => ({
+          pageId: page.id,
+          sectionType: section.type,
+          title: section.title,
+          content: section.content,
+          sortOrder: index,
+        })),
+      );
+
+      return page;
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return {
+        success: false,
+        message: `The address /p/${slug} was just taken. Choose another one.`,
+      };
     }
+    throw error;
+  }
 
-    await tx.insert(pageSections).values(
-      DEFAULT_SECTIONS.map((section, index) => ({
-        pageId: page.id,
-        sectionType: section.type,
-        title: section.title,
-        content: section.content,
-        sortOrder: index,
-      })),
-    );
-
-    return page;
-  });
-
-  redirect(`/dashboard/pages/${inserted.id}/edit`);
+  redirect(`/dashboard/pages/${inserted.id}/preview`);
 }
 
 export async function updatePageAction(_state: ActionState, formData: FormData): Promise<ActionState> {
@@ -135,7 +186,15 @@ export async function updatePageAction(_state: ActionState, formData: FormData):
     return { success: false, message: error instanceof Error ? error.message : "Template is unavailable." };
   }
 
-  const slug = await uniquePageSlug(parsed.data.slug, current.id);
+  const slugAvailability = await getPageSlugAvailability(parsed.data.slug, current.id);
+  if (!slugAvailability.available) {
+    return {
+      success: false,
+      message: `The address /p/${slugAvailability.slug} is already taken. Choose another one.`,
+    };
+  }
+
+  const slug = slugAvailability.slug;
   const introUrl = cleanHttpUrl(parsed.data.introVideoUrl);
 
   await db
@@ -161,6 +220,9 @@ export async function updatePageAction(_state: ActionState, formData: FormData):
 
   revalidatePath(`/dashboard/pages/${pageId}/edit`);
   revalidatePath(`/dashboard/pages/${pageId}/preview`);
+  if (current.slug !== slug) {
+    revalidatePath(`/p/${current.slug}`);
+  }
   revalidatePath(`/p/${slug}`);
   return { success: true, message: "Page details saved." };
 }
@@ -405,6 +467,7 @@ export async function publishPageAction(formData: FormData) {
     .where(and(eq(pages.id, pageId), eq(pages.creatorId, profile.id)));
   revalidatePath(`/dashboard/pages/${pageId}/preview`);
   revalidatePath(`/p/${page.slug}`);
+  redirect(`/dashboard/pages/${pageId}/published`);
 }
 
 export async function pausePageAction(formData: FormData) {

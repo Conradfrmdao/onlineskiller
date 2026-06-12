@@ -24,7 +24,7 @@ export async function PublicHeader() {
             </Button>
           ) : null}
           <Button asChild size="sm">
-            <Link href={userId ? "/dashboard" : "/sign-up"}>{userId ? "Dashboard" : "Start free"}</Link>
+            <Link href={userId ? "/dashboard" : "/sign-up"}>{userId ? "Dashboard" : "Start building"}</Link>
           </Button>
         </div>
       </div>

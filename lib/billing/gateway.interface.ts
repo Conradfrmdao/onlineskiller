@@ -1,6 +1,5 @@
 import type { PlanName } from "@/lib/billing/plans";
 import type { BillingCurrency } from "@/lib/billing/money";
-import type { CheckoutPaymentMethod } from "@/lib/billing/payment-methods";
 
 export type CheckoutInput = {
   merchantReference: string;
@@ -10,7 +9,6 @@ export type CheckoutInput = {
   description: string;
   callbackUrl: string;
   notificationId?: string;
-  requestedPaymentMethod: CheckoutPaymentMethod;
   recurring: boolean;
   customer: {
     email: string;

@@ -1,7 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import type { TemplateSeed } from "@/lib/pages/template-seeds";
 
-export function TemplatePreview({ template }: { template: TemplateSeed }) {
+export function TemplatePreview({
+  template,
+  action,
+}: {
+  template: TemplateSeed;
+  action?: React.ReactNode;
+}) {
   return (
     <article className="panel overflow-hidden rounded-2xl">
       <div
@@ -47,6 +53,7 @@ export function TemplatePreview({ template }: { template: TemplateSeed }) {
           </Badge>
         </div>
         <p className="mt-2 text-sm leading-6 text-slate-600">{template.description}</p>
+        {action ? <div className="mt-5">{action}</div> : null}
       </div>
     </article>
   );

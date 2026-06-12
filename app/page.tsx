@@ -59,12 +59,12 @@ export default function HomePage() {
               <span className="text-blue-600">Make Your First Sales.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Start your 7-day free trial with OnlineSkiller and get the product, website, content, tools, and roadmap
-              designed to help you make your first sale.
+              Create and preview your product page for free. Choose a plan only when you are ready to publish,
+              share your link, and start making sales.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link href="/sign-up">Start your 7-day free trial <ArrowRight /></Link>
+                <Link href="/sign-up">Start building free <ArrowRight /></Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link href="/templates">Explore templates</Link>

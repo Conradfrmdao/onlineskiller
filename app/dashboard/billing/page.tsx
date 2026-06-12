@@ -1,4 +1,4 @@
-import { Check, CreditCard, ShieldCheck, Smartphone } from "lucide-react";
+import { Check, CreditCard, LockKeyhole, ShieldCheck } from "lucide-react";
 
 import { cancelAtPeriodEndAction } from "@/actions/billing-actions";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireCreator } from "@/lib/auth/user";
 import { formatCheckoutPrice, getCheckoutPrice } from "@/lib/billing/checkout-pricing";
-import { CHECKOUT_PAYMENT_METHODS } from "@/lib/billing/payment-methods";
-import { formatPlanPrice, PLANS } from "@/lib/billing/plans";
+import { canPurchasePlan, formatPlanPrice, PLANS } from "@/lib/billing/plans";
 import { getCreatorEntitlements } from "@/lib/billing/subscription";
+import { cleanInternalPath } from "@/lib/utils/urls";
 
 export default async function BillingPage({
   searchParams,
@@ -18,6 +18,10 @@ export default async function BillingPage({
 }) {
   const { profile } = await requireCreator();
   const params = await searchParams;
+  const returnTo = cleanInternalPath(
+    typeof params.returnTo === "string" ? params.returnTo : "",
+    "/dashboard/billing",
+  );
   const entitlements = await getCreatorEntitlements(profile.id);
   const message =
     params.payment === "success"
@@ -31,7 +35,13 @@ export default async function BillingPage({
             : params.reason === "premium-template"
               ? { variant: "warning" as const, text: "The selected template requires an active Growth or Pro plan." }
             : params.error
-              ? { variant: "destructive" as const, text: "Checkout could not be completed. Please try again." }
+              ? {
+                  variant: "destructive" as const,
+                  text:
+                    params.error === "plan-locked"
+                      ? "That plan is locked while your current subscription is active."
+                      : "Checkout could not be completed. Please try again.",
+                }
               : null;
 
   return (
@@ -65,6 +75,12 @@ export default async function BillingPage({
               Automatic card renewal is active. Mobile money payments remain one-time unless your payment method supports renewal.
             </p>
           ) : null}
+          {entitlements.subscription?.scheduledPlanName && entitlements.subscription.scheduledPeriodStart ? (
+            <p className="mt-2 text-sm font-semibold text-blue-700">
+              {PLANS[entitlements.subscription.scheduledPlanName as keyof typeof PLANS]?.label || entitlements.subscription.scheduledPlanName} is paid and will begin{" "}
+              {entitlements.subscription.scheduledPeriodStart.toLocaleDateString()}.
+            </p>
+          ) : null}
         </div>
         {entitlements.active && !entitlements.subscription?.cancelAtPeriodEnd ? (
           <form action={cancelAtPeriodEndAction}>
@@ -75,6 +91,20 @@ export default async function BillingPage({
       <div className="grid gap-4 md:grid-cols-3">
         {Object.values(PLANS).map((plan) => {
           const checkoutPrice = getCheckoutPrice(plan);
+          const canPurchase = canPurchasePlan({
+            active: entitlements.active,
+            currentPlan: entitlements.plan.name,
+            targetPlan: plan.name,
+            scheduledPlanName: entitlements.subscription?.scheduledPlanName,
+          });
+          const currentPlan = entitlements.active && plan.name === entitlements.plan.name;
+          const lockedReason = entitlements.subscription?.scheduledPlanName
+            ? "An upgrade is already scheduled."
+            : currentPlan
+              ? "This is your current plan."
+              : entitlements.active
+                ? "Lower plans unlock after the current period ends."
+                : "";
 
           return (
           <article key={plan.name} className={`panel rounded-2xl p-5 ${plan.name === "growth" ? "ring-2 ring-blue-500" : ""}`}>
@@ -96,36 +126,28 @@ export default async function BillingPage({
                 <p key={feature} className="flex gap-2 text-sm text-slate-600"><Check className="mt-0.5 size-4 shrink-0 text-blue-600" />{feature}</p>
               ))}
             </div>
-            <div className="mt-7">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-                Choose how to pay
-              </p>
-              <div className="space-y-2">
-                {CHECKOUT_PAYMENT_METHODS.map((method, index) => (
-                  <form key={method.value} action="/api/billing/checkout" method="post">
-                    <input type="hidden" name="plan" value={plan.name} />
-                    <input type="hidden" name="paymentMethod" value={method.value} />
-                    <Button
-                      type="submit"
-                      className={
-                        method.value === "mtn_mobile_money"
-                          ? "w-full justify-start bg-yellow-400 text-slate-950 hover:bg-yellow-300"
-                          : method.value === "airtel_money"
-                            ? "w-full justify-start bg-red-600 text-white hover:bg-red-500"
-                            : "w-full justify-start"
-                      }
-                      variant={index === 0 && plan.name === "growth" ? "default" : "outline"}
-                    >
-                      {method.value === "card" ? <CreditCard /> : <Smartphone />}
-                      <span className="text-left">
-                        <span className="block">{method.label}</span>
-                        <span className="block text-[11px] font-medium opacity-75">{method.description}</span>
-                      </span>
-                    </Button>
-                  </form>
-                ))}
-              </div>
-            </div>
+            <form action="/api/billing/checkout" method="post" className="mt-7">
+              <input type="hidden" name="plan" value={plan.name} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <Button
+                type="submit"
+                className="w-full"
+                variant={plan.name === "growth" && canPurchase ? "default" : "outline"}
+                disabled={!canPurchase}
+              >
+                {canPurchase ? <CreditCard /> : <LockKeyhole />}
+                {canPurchase
+                  ? entitlements.active
+                    ? `Pay now, start ${entitlements.subscription?.currentPeriodEnd?.toLocaleDateString()}`
+                    : "Continue to secure checkout"
+                  : currentPlan
+                    ? "Current plan"
+                    : "Plan locked"}
+              </Button>
+              {!canPurchase && lockedReason ? (
+                <p className="mt-2 text-center text-xs leading-5 text-slate-500">{lockedReason}</p>
+              ) : null}
+            </form>
           </article>
           );
         })}

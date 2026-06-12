@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCheckoutPrice } from "@/lib/billing/checkout-pricing";
-import { getCheckoutPaymentMethod } from "@/lib/billing/payment-methods";
 
 function safeCallback(value: string) {
   try {
@@ -32,7 +31,6 @@ export default async function MockCheckoutPage({
   const amount = Number(typeof params.amount === "string" ? params.amount : "0");
   const currency = params.currency === "USD" ? "USD" : "UGX";
   const plan = typeof params.plan === "string" ? params.plan : "plan";
-  const method = getCheckoutPaymentMethod(typeof params.method === "string" ? params.method : "");
 
   if (!callback || !Number.isFinite(amount) || amount <= 0) {
     notFound();
@@ -48,7 +46,7 @@ export default async function MockCheckoutPage({
       <div className="mx-auto max-w-lg">
         <div className="text-center">
           <Badge variant="warning">OnlineSkiller test gateway</Badge>
-          <h1 className="mt-4 text-3xl font-bold">Confirm {method.label}</h1>
+          <h1 className="mt-4 text-3xl font-bold">Choose how to test payment</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             This simulates the checkout flow only. No card or mobile money account will be charged.
           </p>
@@ -69,18 +67,13 @@ export default async function MockCheckoutPage({
         <div className="mt-5 space-y-3">
           <Button asChild size="lg" className="h-auto w-full justify-between px-5 py-4">
             <Link href={mobileCallback.toString()}>
-              <span className="flex items-center gap-3">
-                {method.value === "card" ? <CreditCard /> : <Smartphone />}
-                Complete test {method.label}
-              </span>
-              <span className="text-xs font-medium opacity-75">No real charge</span>
+              <span className="flex items-center gap-3"><Smartphone /> Test mobile money</span>
+              <span className="text-xs font-medium opacity-75">Recommended first</span>
             </Link>
           </Button>
-          {method.value !== "card" ? (
-            <Button asChild size="lg" variant="outline" className="h-auto w-full justify-start px-5 py-4">
-              <Link href={cardCallback.toString()}><CreditCard /> Switch to test card</Link>
-            </Button>
-          ) : null}
+          <Button asChild size="lg" variant="outline" className="h-auto w-full justify-start px-5 py-4">
+            <Link href={cardCallback.toString()}><CreditCard /> Test card payment</Link>
+          </Button>
         </div>
 
         <p className="mt-6 text-center text-xs leading-5 text-slate-500">

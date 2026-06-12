@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { payments } from "@/db/schema";
 import { requireCreator } from "@/lib/auth/user";
 import { formatCheckoutPrice } from "@/lib/billing/checkout-pricing";
-import { getCheckoutPaymentMethod } from "@/lib/billing/payment-methods";
 import { getPlan } from "@/lib/billing/plans";
 import { db } from "@/lib/db";
 
@@ -46,7 +45,6 @@ export default async function EmbeddedBillingCheckoutPage({
   }
 
   const plan = getPlan(payment.planName);
-  const requestedMethod = getCheckoutPaymentMethod(payment.requestedPaymentMethod);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -60,18 +58,14 @@ export default async function EmbeddedBillingCheckoutPage({
           amount: payment.amount,
           currency: payment.currency === "UGX" ? "UGX" : "USD",
           isTestPrice: process.env.BILLING_TEST_MODE === "true",
-        })} payment with ${requestedMethod.label} without leaving OnlineSkiller.`}
+        })} payment without leaving OnlineSkiller.`}
       />
       {process.env.BILLING_TEST_MODE === "true" ? (
         <Alert variant="warning">
           Test mode is active. This checkout uses the temporary UGX 500 validation price.
         </Alert>
       ) : null}
-      <EmbeddedPaymentFrame
-        checkoutUrl={checkoutUrl}
-        provider={payment.provider}
-        requestedMethod={requestedMethod.label}
-      />
+      <EmbeddedPaymentFrame checkoutUrl={checkoutUrl} provider={payment.provider} />
     </div>
   );
 }

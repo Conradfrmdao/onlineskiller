@@ -4,7 +4,8 @@ import { eq, or } from "drizzle-orm";
 
 import { payments, subscriptions } from "@/db/schema";
 import type { PaymentVerification } from "@/lib/billing/gateway.interface";
-import { nextPeriod } from "@/lib/billing/periods";
+import { addBillingMonth, hasValidAccess, nextPeriod } from "@/lib/billing/periods";
+import { isHigherPlan, isPlanName } from "@/lib/billing/plans";
 import { db } from "@/lib/db";
 import { writeAuditLog } from "@/lib/utils/audit";
 import { createMerchantReference } from "@/lib/utils/slugs";
@@ -120,6 +121,112 @@ export async function applyVerifiedPayment(
       .where(eq(subscriptions.creatorId, payment.creatorId))
       .limit(1);
     const subscription = subscriptionRows[0];
+
+    if (recurringNotification && subscription?.scheduledPlanName) {
+      const updatedPayments = await tx
+        .update(payments)
+        .set({
+          subscriptionId: subscription.id,
+          providerTrackingId: verification.providerTrackingId,
+          providerSubscriptionId: verification.providerSubscriptionId || payment.providerSubscriptionId,
+          paymentMethod: verification.paymentMethod || payment.paymentMethod,
+          status: "completed",
+          providerPayload: {
+            ...verification.raw,
+            subscriptionChangeIgnored: "scheduled_upgrade",
+          },
+          paidAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.id, payment.id))
+        .returning();
+
+      await writeAuditLog(tx, {
+        action: "subscription.renewal_ignored_scheduled_upgrade",
+        entityType: "subscription",
+        entityId: subscription.id,
+        metadata: {
+          paymentId: payment.id,
+          currentPlanName: subscription.planName,
+          scheduledPlanName: subscription.scheduledPlanName,
+          providerTrackingId: verification.providerTrackingId,
+        },
+      });
+
+      return {
+        alreadyProcessed: false,
+        payment: updatedPayments[0] || payment,
+        subscriptionChangeIgnored: "scheduled_upgrade",
+      };
+    }
+
+    const scheduledUpgrade =
+      subscription &&
+      hasValidAccess(subscription) &&
+      isPlanName(subscription.planName) &&
+      isPlanName(payment.planName) &&
+      isHigherPlan(payment.planName, subscription.planName);
+
+    if (scheduledUpgrade && subscription.currentPeriodEnd) {
+      const scheduledStart = subscription.currentPeriodEnd;
+      const scheduledEnd = addBillingMonth(scheduledStart);
+
+      await tx
+        .update(subscriptions)
+        .set({
+          scheduledPlanName: payment.planName,
+          scheduledPeriodStart: scheduledStart,
+          scheduledPeriodEnd: scheduledEnd,
+          provider: payment.provider,
+          providerSubscriptionId:
+            verification.providerSubscriptionId ||
+            payment.providerSubscriptionId ||
+            subscription.providerSubscriptionId,
+          cancelAtPeriodEnd: true,
+          recurringEnabled: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(subscriptions.id, subscription.id));
+
+      const updatedPayments = await tx
+        .update(payments)
+        .set({
+          subscriptionId: subscription.id,
+          providerTrackingId: verification.providerTrackingId,
+          providerSubscriptionId: verification.providerSubscriptionId || payment.providerSubscriptionId,
+          paymentMethod: verification.paymentMethod || payment.paymentMethod,
+          status: "completed",
+          providerPayload: verification.raw,
+          paidAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.id, payment.id))
+        .returning();
+
+      await writeAuditLog(tx, {
+        action: "subscription.upgrade_scheduled",
+        entityType: "subscription",
+        entityId: subscription.id,
+        metadata: {
+          paymentId: payment.id,
+          currentPlanName: subscription.planName,
+          scheduledPlanName: payment.planName,
+          scheduledPeriodStart: scheduledStart.toISOString(),
+          scheduledPeriodEnd: scheduledEnd.toISOString(),
+        },
+      });
+
+      return {
+        alreadyProcessed: false,
+        payment: updatedPayments[0] || payment,
+        scheduledUpgrade: {
+          planName: payment.planName,
+          start: scheduledStart,
+          end: scheduledEnd,
+        },
+      };
+    }
+
     const period = nextPeriod(subscription?.currentPeriodEnd);
 
     let subscriptionId = subscription?.id;
@@ -136,6 +243,9 @@ export async function applyVerifiedPayment(
           status: "active",
           currentPeriodStart: period.start,
           currentPeriodEnd: period.end,
+          scheduledPlanName: null,
+          scheduledPeriodStart: null,
+          scheduledPeriodEnd: null,
           recurringEnabled: payment.isRecurring || subscription.recurringEnabled,
           cancelAtPeriodEnd: false,
           updatedAt: new Date(),
