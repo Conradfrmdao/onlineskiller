@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 
 import { PublicPageRenderer } from "@/components/public-page/PublicPageRenderer";
@@ -19,16 +20,27 @@ function UnavailablePage() {
   );
 }
 
-export default async function PublicCreatorPage({ params }: { params: Promise<{ pageSlug: string }> }) {
-  const { pageSlug } = await params;
+export default async function PublicCreatorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ pageSlug: string }>;
+  searchParams: Promise<{ preview?: string }>;
+}) {
+  const [{ pageSlug }, query] = await Promise.all([params, searchParams]);
   const data = await getPublicPageBySlug(pageSlug);
   if (!data) notFound();
+  const { userId } = await auth();
+  const ownerPreview = query.preview === "1" && userId === data.user.clerkUserId;
 
   if (
-    data.user.status !== "active" ||
-    data.page.status !== "live" ||
-    !data.page.isLive ||
-    !hasValidAccess(data.subscription)
+    !ownerPreview &&
+    (
+      data.user.status !== "active" ||
+      data.page.status !== "live" ||
+      !data.page.isLive ||
+      !hasValidAccess(data.subscription)
+    )
   ) {
     return <UnavailablePage />;
   }
@@ -39,6 +51,7 @@ export default async function PublicCreatorPage({ params }: { params: Promise<{ 
     <PublicPageRenderer
       data={{ ...data, template: allowedTemplate }}
       removableBranding={plan.removableBranding}
+      preview={ownerPreview}
     />
   );
 }

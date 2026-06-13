@@ -6,7 +6,7 @@ import { Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function PreviewViewport({ children }: { children: React.ReactNode }) {
+export function PreviewViewport({ previewUrl }: { previewUrl: string }) {
   const [viewport, setViewport] = useState<"desktop" | "mobile">("mobile");
 
   return (
@@ -37,7 +37,15 @@ export function PreviewViewport({ children }: { children: React.ReactNode }) {
             : "max-w-[1440px] rounded-2xl border border-slate-200 shadow-xl",
         )}
       >
-        {children}
+        <iframe
+          key={viewport}
+          src={previewUrl}
+          title={`${viewport} page preview`}
+          className={cn(
+            "block w-full bg-white",
+            viewport === "mobile" ? "h-[760px]" : "h-[78vh] min-h-[720px]",
+          )}
+        />
       </div>
     </div>
   );

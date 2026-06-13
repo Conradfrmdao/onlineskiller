@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUploadField } from "@/components/uploads/ImageUploadField";
 import type { CreatorProfile, Template } from "@/db/schema";
 import { LAUNCH_GOALS, type LaunchGoal } from "@/lib/pages/launch-flow";
 import { PAGE_TYPES, PAGE_TYPE_LABELS, type PageType } from "@/lib/pages/types";
@@ -41,6 +43,14 @@ const preferredTemplates = [
   "ebook-launch",
   "service-expert",
 ];
+const templateImages: Record<string, string> = {
+  "digital-hustle": "/landing/offer-builder.jpg",
+  "luxury-coach": "/landing/launch-roadmap.jpg",
+  "clean-academy": "/landing/page-studio.jpg",
+  "bold-seller": "/landing/marketing-room.jpg",
+  "ebook-launch": "/landing/offer-builder.jpg",
+  "service-expert": "/landing/launch-roadmap.jpg",
+};
 
 const pageTypeDetails: Record<
   PageType,
@@ -79,12 +89,15 @@ export function CreatePageForm({
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(profile.niche || "");
   const [priceText, setPriceText] = useState("");
+  const [logoUrl, setLogoUrl] = useState(profile.logoUrl || "");
+  const [heroImageUrl, setHeroImageUrl] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [slug, setSlug] = useState("");
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken" | "error">("idle");
   const [launchGoal, setLaunchGoal] = useState<LaunchGoal>("whatsapp");
   const [ctaDestination, setCtaDestination] = useState("");
   const [introVideoUrl, setIntroVideoUrl] = useState("");
+  const wizardTopRef = useRef<HTMLFormElement>(null);
 
   const curatedTemplates = useMemo(() => {
     const preferred = preferredTemplates
@@ -159,8 +172,19 @@ export function CreatePageForm({
     return true;
   }
 
+  function moveToStep(nextStep: number) {
+    setStep(Math.max(0, Math.min(stepLabels.length - 1, nextStep)));
+    window.requestAnimationFrame(() => {
+      wizardTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   return (
-    <form action={action} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_30px_90px_-65px_rgba(7,20,38,.55)]">
+    <form
+      ref={wizardTopRef}
+      action={action}
+      className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_30px_90px_-65px_rgba(7,20,38,.55)]"
+    >
       <input type="hidden" name="pageType" value={pageType} />
       <input type="hidden" name="templateId" value={templateId} />
       <input type="hidden" name="launchGoal" value={launchGoal} />
@@ -240,16 +264,28 @@ export function CreatePageForm({
                   disabled={locked}
                   onClick={() => setTemplateId(template.id)}
                   className={cn(
-                    "overflow-hidden rounded-2xl border text-left transition disabled:cursor-not-allowed disabled:opacity-55",
-                    selected ? "border-blue-500 ring-2 ring-blue-500/15" : "border-slate-200 hover:border-blue-300",
+                    "group overflow-hidden rounded-2xl border bg-white text-left transition disabled:cursor-not-allowed disabled:opacity-55",
+                    selected
+                      ? "border-blue-500 shadow-lg shadow-blue-950/10 ring-2 ring-blue-500/15"
+                      : "border-slate-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg",
                   )}
                 >
-                  <span
-                    className="block h-28 p-4"
-                    style={{ background: template.config.theme.background, color: template.config.theme.text }}
-                  >
-                    <span className="block h-2 w-16 rounded-full" style={{ background: template.config.theme.accent }} />
-                    <span className="mt-8 block text-lg font-black">{template.name}</span>
+                  <span className="relative block h-36 overflow-hidden bg-slate-950">
+                    <Image
+                      src={templateImages[template.slug] || "/landing/page-studio.jpg"}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                      className="object-cover opacity-80 transition duration-500 group-hover:scale-105"
+                    />
+                    <span className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
+                    <span
+                      className="absolute left-4 top-4 h-1.5 w-14 rounded-full"
+                      style={{ background: template.config.theme.accent }}
+                    />
+                    <span className="absolute inset-x-4 bottom-4 block text-lg font-black text-white">
+                      {template.name}
+                    </span>
                   </span>
                   <span className="block p-4">
                     <span className="flex items-center justify-between gap-2">
@@ -295,6 +331,9 @@ export function CreatePageForm({
             <div className="space-y-2">
               <Label htmlFor="priceText">Price shown to customers</Label>
               <Input id="priceText" name="priceText" value={priceText} onChange={(event) => setPriceText(event.target.value)} placeholder="$49, UGX 180,000, or Book a call" />
+              <p className="text-xs leading-5 text-slate-500">
+                Include the currency for the clearest checkout experience. A bare number uses your profile country.
+              </p>
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="slug">Public page address</Label>
@@ -332,13 +371,34 @@ export function CreatePageForm({
                         : "Your public link must be unique across OnlineSkiller."}
               </p>
             </div>
+            <div className="sm:col-span-2">
+              <ImageUploadField
+                name="logoUrl"
+                label="Your logo"
+                value={logoUrl}
+                onChange={setLogoUrl}
+                purpose="logo"
+                compact
+                help="Upload a square logo or brand mark. This appears in the page header."
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <ImageUploadField
+                name="heroImageUrl"
+                label="Cover photo"
+                value={heroImageUrl}
+                onChange={setHeroImageUrl}
+                purpose="cover"
+                help="Show yourself, your product, or the result customers can achieve."
+              />
+            </div>
           </div>
           <div className="mt-6 rounded-2xl bg-slate-50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">Using your creator profile</p>
                 <p className="mt-1 text-xs text-slate-500">
-                  {profile.country || "Country not set"} · {profile.whatsappNumber || "WhatsApp not set"} · @{profile.instagramHandle || "Instagram not set"}
+                  {profile.country || "Country not set"} | {profile.whatsappNumber || "WhatsApp not set"} | @{profile.instagramHandle || "Instagram not set"}
                 </p>
               </div>
               <Link href="/dashboard/settings" className="text-xs font-bold text-blue-700 hover:underline">Update profile</Link>
@@ -397,9 +457,9 @@ export function CreatePageForm({
 
         <section className={cn(step !== 4 && "hidden")}>
           <Badge>Final review</Badge>
-          <h2 className="mt-4 text-2xl font-bold">Your launch page is ready to generate</h2>
+          <h2 className="mt-4 text-2xl font-bold">Your page studio is ready</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Add a video now or skip it and improve the page after previewing.
+            Create the page, personalize its starter sections, then preview it before publishing.
           </p>
           <div className="mt-6 space-y-2">
             <Label htmlFor="introVideoUrl">Intro, demo, or testimonial video (optional)</Label>
@@ -423,6 +483,7 @@ export function CreatePageForm({
               ["Goal", selectedGoal.label],
               ["Public link", `/p/${slug || "your-page"}`],
               ["Price", priceText || "Not shown yet"],
+              ["Cover photo", heroImageUrl ? "Added" : "Add after creating"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl bg-slate-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
@@ -445,7 +506,7 @@ export function CreatePageForm({
             type="button"
             variant="ghost"
             disabled={step === 0 || pending}
-            onClick={() => setStep((current) => Math.max(0, current - 1))}
+            onClick={() => moveToStep(step - 1)}
           >
             <ArrowLeft /> Back
           </Button>
@@ -454,13 +515,13 @@ export function CreatePageForm({
               type="button"
               size="lg"
               disabled={!canContinue()}
-              onClick={() => setStep((current) => Math.min(stepLabels.length - 1, current + 1))}
+              onClick={() => moveToStep(step + 1)}
             >
               Continue <ArrowRight />
             </Button>
           ) : (
             <Button type="submit" size="lg" disabled={pending || !canContinue()}>
-              {pending ? "Generating your page..." : "Generate and preview"} <Sparkles />
+              {pending ? "Creating your studio..." : "Create page studio"} <Sparkles />
             </Button>
           )}
         </div>

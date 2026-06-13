@@ -1,64 +1,46 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
-import {
-  CalendarCheck2,
-  Globe2,
-  Megaphone,
-  PackageOpen,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
-const services: Array<{
-  title: string;
-  eyebrow: string;
-  description: string;
-  detail: string;
-  icon: LucideIcon;
-  accent: string;
-}> = [
+const services = [
   {
-    title: "Your digital product",
+    title: "Shape a product people understand",
     eyebrow: "Offer builder",
-    description: "Shape your course, ebook, coaching program, service, or skill into a clear offer people understand.",
-    detail: "Product structure",
-    icon: PackageOpen,
+    description: "Turn your course, ebook, coaching, service, or skill into a focused offer with a clear next step.",
+    image: "/landing/offer-builder.jpg",
     accent: "#f5b82e",
   },
   {
-    title: "A website that sells",
+    title: "Launch a page that feels like your brand",
     eyebrow: "Page studio",
-    description: "Launch a polished page with your story, pricing, videos, proof, WhatsApp, and direct calls to action.",
-    detail: "Professional website",
-    icon: Globe2,
+    description: "Use your own logo, photography, pricing, proof, video, and calls to action on every screen size.",
+    image: "/landing/page-studio.jpg",
     accent: "#38bdf8",
   },
   {
-    title: "Content ready to post",
+    title: "Create content around your real offer",
     eyebrow: "Marketing room",
-    description: "Use campaign ideas, hooks, captions, video concepts, hashtags, and scripts built around your offer.",
-    detail: "Marketing content",
-    icon: Megaphone,
+    description: "Plan practical campaigns, hooks, captions, videos, and sales conversations without starting from zero.",
+    image: "/landing/marketing-room.jpg",
     accent: "#a78bfa",
   },
   {
-    title: "Your first-sale roadmap",
-    eyebrow: "Seven-day launch",
-    description: "Follow a practical sequence that moves from setup to publishing, promotion, conversations, and sales.",
-    detail: "Action roadmap",
-    icon: CalendarCheck2,
+    title: "Follow a clear path to your first sales",
+    eyebrow: "Launch roadmap",
+    description: "Move from setup to publishing and promotion with one useful next action at a time.",
+    image: "/landing/launch-roadmap.jpg",
     accent: "#34d399",
   },
-];
+] as const;
 
 export function ServiceCardShuffle() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
 
   useEffect(() => {
-    if (isShuffling) {
-      return;
-    }
+    if (isShuffling) return;
 
     const timeout = window.setTimeout(() => setIsShuffling(true), 5000);
     return () => window.clearTimeout(timeout);
@@ -70,12 +52,11 @@ export function ServiceCardShuffle() {
   }
 
   return (
-    <div className="relative mx-auto h-[31rem] w-full max-w-xl sm:h-[32rem] lg:h-[29rem]">
+    <div className="relative mx-auto h-[30rem] w-full max-w-xl sm:h-[33rem] lg:h-[31rem]">
       <div className="absolute left-1/2 top-1/2 h-4/5 w-4/5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/15 blur-3xl" />
-      <div className="absolute inset-x-4 bottom-3 top-3 sm:inset-x-7">
+      <div className="absolute inset-x-3 bottom-3 top-3 sm:inset-x-7">
         {services.map((service, index) => {
           const position = (index - activeIndex + services.length) % services.length;
-          const Icon = service.icon;
           const transforms = isShuffling
             ? [
                 "animate-[card-shuffle-out_800ms_cubic-bezier(.55,.05,.35,1)_forwards]",
@@ -93,76 +74,69 @@ export function ServiceCardShuffle() {
           return (
             <article
               key={service.title}
-              className={`absolute inset-0 overflow-hidden rounded-[2rem] border border-white/10 bg-[#071426] p-6 text-white shadow-[0_35px_90px_-35px_rgba(7,20,38,.75)] transition-all duration-700 ease-out motion-reduce:transition-none sm:p-8 ${transforms[position]}`}
+              className={`absolute inset-0 overflow-hidden rounded-[2rem] border border-slate-950/10 bg-[#071426] text-white shadow-[0_35px_90px_-35px_rgba(7,20,38,.75)] transition-all duration-700 ease-out motion-reduce:transition-none ${transforms[position]}`}
               style={{ zIndex: services.length - position }}
               aria-hidden={position !== 0}
               onAnimationEnd={position === 0 && isShuffling ? finishShuffle : undefined}
             >
+              <Image
+                src={service.image}
+                alt=""
+                fill
+                priority={index === 0}
+                sizes="(max-width: 1024px) 90vw, 520px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,13,27,.08)_16%,rgba(4,13,27,.45)_54%,rgba(4,13,27,.97)_100%)]" />
               <div
                 className="absolute inset-x-0 top-0 h-1"
                 style={{ backgroundColor: service.accent }}
               />
-              <div
-                className="absolute -right-24 -top-24 size-64 rounded-full blur-3xl"
-                style={{ backgroundColor: `${service.accent}20` }}
-              />
-              <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full border border-white/10 bg-white/[0.07] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-slate-300">
-                  OnlineSkiller launch kit
-                </span>
-                <span className="font-mono text-xs font-bold text-slate-500">0{index + 1} / 04</span>
-              </div>
 
-              <div className="mt-12 sm:mt-14 lg:mt-10">
-                <span
-                  className="grid size-14 place-items-center rounded-2xl border border-white/10 shadow-inner"
-                  style={{ backgroundColor: `${service.accent}20`, color: service.accent }}
-                >
-                  <Icon className="size-7" />
-                </span>
-                <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: service.accent }}>
-                  {service.eyebrow}
-                </p>
-                <h2 className="mt-3 max-w-md text-3xl font-bold tracking-tight sm:text-4xl">{service.title}</h2>
-                <p className="mt-4 max-w-md text-sm leading-7 text-slate-300">{service.description}</p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {["Guided setup", service.detail, "Ready to customize"].map((item) => (
-                    <span key={item} className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[0.68rem] font-medium text-slate-300">
-                      {item}
-                    </span>
-                  ))}
+              <div className="relative flex h-full flex-col justify-between p-5 sm:p-7">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="rounded-full border border-white/20 bg-black/20 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-md">
+                    OnlineSkiller launch kit
+                  </span>
+                  <span className="rounded-full bg-black/25 px-2.5 py-1 font-mono text-[0.68rem] font-bold text-white/75 backdrop-blur-md">
+                    0{index + 1} / 04
+                  </span>
                 </div>
-              </div>
 
-              <div className="absolute inset-x-6 bottom-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.06] p-4 sm:inset-x-8 sm:bottom-8">
                 <div>
-                  <p className="text-[0.65rem] uppercase tracking-[0.16em] text-slate-400">Next card in 5 seconds</p>
-                  <div className="mt-2 h-1.5 w-28 overflow-hidden rounded-full bg-white/10">
-                    <span
-                      key={`${activeIndex}-${isShuffling}`}
-                      className="block h-full origin-left rounded-full"
-                      style={{
-                        backgroundColor: service.accent,
-                        animation: position === 0 && !isShuffling ? "card-timer 5s linear forwards" : "none",
-                      }}
-                    />
+                  <p
+                    className="text-xs font-bold uppercase tracking-[0.2em]"
+                    style={{ color: service.accent }}
+                  >
+                    {service.eyebrow}
+                  </p>
+                  <h2 className="mt-3 max-w-lg text-3xl font-bold leading-[1.04] tracking-[-0.035em] sm:text-4xl">
+                    {service.title}
+                  </h2>
+                  <p className="mt-4 max-w-lg text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
+                    {service.description}
+                  </p>
+                  <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/15 pt-4">
+                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-white/80">
+                      Built for real creator businesses <ArrowUpRight className="size-4" />
+                    </span>
+                    <div className="flex gap-1.5">
+                      {services.map((item, dotIndex) => (
+                        <button
+                          key={item.title}
+                          type="button"
+                          onClick={() => {
+                            setActiveIndex(dotIndex);
+                            setIsShuffling(false);
+                          }}
+                          className={`h-1.5 rounded-full transition-all ${
+                            dotIndex === activeIndex ? "w-7 bg-white" : "w-1.5 bg-white/35"
+                          }`}
+                          aria-label={`Show ${item.title}`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-1.5">
-                  {services.map((item, dotIndex) => (
-                    <button
-                      key={item.title}
-                      type="button"
-                      onClick={() => {
-                        setActiveIndex(dotIndex);
-                        setIsShuffling(false);
-                      }}
-                      className={`h-1.5 rounded-full transition-all ${
-                        dotIndex === activeIndex ? "w-7 bg-white" : "w-1.5 bg-white/30"
-                      }`}
-                      aria-label={`Show ${item.title}`}
-                    />
-                  ))}
                 </div>
               </div>
             </article>

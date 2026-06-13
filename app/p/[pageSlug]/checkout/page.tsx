@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { hasValidAccess } from "@/lib/billing/periods";
+import { formatOfferPrice } from "@/lib/pages/pricing";
 import { getPublicPageBySlug } from "@/lib/pages/queries";
 import { whatsappUrl } from "@/lib/utils/urls";
 
@@ -62,6 +63,7 @@ export default async function PublicCheckoutPage({
   }
 
   const methods = data.paymentMethods.filter((method) => method.isEnabled);
+  const displayPrice = formatOfferPrice(data.page.priceText, data.creator.country);
 
   if (methods.length === 0) {
     return <CheckoutUnavailable />;
@@ -96,7 +98,7 @@ export default async function PublicCheckoutPage({
                 <Badge variant="secondary">{data.page.category || data.page.pageType.replaceAll("-", " ")}</Badge>
                 <h1 className="mt-4 text-2xl font-bold tracking-tight">{data.page.title}</h1>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{data.page.subtitle}</p>
-                {data.page.priceText ? <p className="mt-5 text-3xl font-black text-blue-700">{data.page.priceText}</p> : null}
+                {displayPrice ? <p className="mt-5 text-3xl font-black text-blue-700">{displayPrice}</p> : null}
                 <div className="mt-6 border-t border-slate-200 pt-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">Sold by</p>
                   <p className="mt-1 font-semibold">{data.creator.businessName}</p>

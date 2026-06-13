@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import {
   courseLessons,
   courseModules,
+  creatorProfiles,
   pageSections,
   pages,
   pageVideos,
@@ -21,6 +22,7 @@ import { getCreatorSubscription } from "@/lib/billing/subscription";
 import { db } from "@/lib/db";
 import {
   getLaunchGoal,
+  getLaunchScore,
   getStarterSections,
   resolveLaunchCta,
 } from "@/lib/pages/launch-flow";
@@ -116,6 +118,8 @@ export async function createPageAction(_state: ActionState, formData: FormData):
 
   const slug = slugAvailability.slug;
   const introVideoUrl = cleanHttpUrl(parsed.data.introVideoUrl);
+  const heroImageUrl = cleanHttpUrl(parsed.data.heroImageUrl);
+  const logoUrl = cleanHttpUrl(parsed.data.logoUrl);
   let inserted: typeof pages.$inferSelect;
 
   try {
@@ -135,6 +139,7 @@ export async function createPageAction(_state: ActionState, formData: FormData):
           ctaText: cta.ctaText,
           ctaUrl: cta.ctaUrl,
           whatsappEnabled: cta.whatsappEnabled,
+          heroImageUrl: heroImageUrl || null,
           introVideoUrl: introVideoUrl || null,
           introVideoProvider: introVideoUrl ? detectVideoProvider(introVideoUrl) : null,
         })
@@ -145,13 +150,26 @@ export async function createPageAction(_state: ActionState, formData: FormData):
         throw new Error("Page could not be created.");
       }
 
+      if (logoUrl && logoUrl !== profile.logoUrl) {
+        await tx
+          .update(creatorProfiles)
+          .set({ logoUrl, updatedAt: new Date() })
+          .where(eq(creatorProfiles.id, profile.id));
+      }
+
       await tx.insert(pageSections).values(
-        getStarterSections(parsed.data.pageType, parsed.data.title).map((section, index) => ({
+        getStarterSections(
+          parsed.data.pageType,
+          parsed.data.title,
+          parsed.data.description,
+          parsed.data.category,
+        ).map((section, index) => ({
           pageId: page.id,
           sectionType: section.type,
           title: section.title,
           content: section.content,
           sortOrder: index,
+          isVisible: section.isVisible ?? true,
         })),
       );
 
@@ -167,7 +185,7 @@ export async function createPageAction(_state: ActionState, formData: FormData):
     throw error;
   }
 
-  redirect(`/dashboard/pages/${inserted.id}/preview`);
+  redirect(`/dashboard/pages/${inserted.id}/builder?created=1`);
 }
 
 export async function updatePageAction(_state: ActionState, formData: FormData): Promise<ActionState> {
@@ -440,6 +458,19 @@ export async function publishPageAction(formData: FormData) {
   const pageId = String(formData.get("pageId") || "");
   const page = await requireOwnedPage(pageId, profile.id);
   const subscription = await getCreatorSubscription(profile.id);
+  const [readinessSections, readinessVideos] = await Promise.all([
+    db.select().from(pageSections).where(eq(pageSections.pageId, pageId)),
+    db.select().from(pageVideos).where(eq(pageVideos.pageId, pageId)),
+  ]);
+  const readiness = getLaunchScore({
+    page,
+    sections: readinessSections,
+    videos: readinessVideos,
+  });
+
+  if (!readiness.publishReady) {
+    redirect(`/dashboard/pages/${pageId}/builder?reason=publish-blocked`);
+  }
 
   if (!hasValidAccess(subscription)) {
     redirect(`/dashboard/billing?returnTo=/dashboard/pages/${pageId}/preview&reason=publish`);

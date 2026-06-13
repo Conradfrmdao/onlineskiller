@@ -16,6 +16,8 @@ export const createPageSchema = z.object({
   ]),
   ctaDestination: z.string().trim().max(1000),
   introVideoUrl: z.string().trim().max(1000),
+  logoUrl: z.string().trim().max(1000),
+  heroImageUrl: z.string().trim().max(1000),
   templateId: z.string().uuid().optional().or(z.literal("")),
 });
 

@@ -24,12 +24,14 @@ export function TrackedCta({
   href,
   children,
   className,
+  style,
   newTab = true,
 }: {
   pageId: string;
   href: string;
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   newTab?: boolean;
 }) {
   function track() {
@@ -42,6 +44,7 @@ export function TrackedCta({
       href={href}
       onClick={track}
       className={className}
+      style={style}
       target={newTab ? "_blank" : undefined}
       rel={newTab ? "noreferrer" : undefined}
     >

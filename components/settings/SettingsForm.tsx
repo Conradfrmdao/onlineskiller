@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { updateSettingsAction } from "@/actions/settings-actions";
 import { Alert } from "@/components/ui/alert";
@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUploadField } from "@/components/uploads/ImageUploadField";
 import type { CreatorProfile } from "@/db/schema";
 
 const initialState = { success: false, message: "" };
 
 export function SettingsForm({ profile }: { profile: CreatorProfile }) {
   const [state, action, pending] = useActionState(updateSettingsAction, initialState);
+  const [logoUrl, setLogoUrl] = useState(profile.logoUrl || "");
   const fields = [
     ["displayName", "Display name", profile.displayName],
     ["businessName", "Business name", profile.businessName],
@@ -24,7 +26,6 @@ export function SettingsForm({ profile }: { profile: CreatorProfile }) {
     ["instagramHandle", "Instagram handle", profile.instagramHandle],
     ["tiktokHandle", "TikTok handle", profile.tiktokHandle],
     ["websiteUrl", "Website URL", profile.websiteUrl || ""],
-    ["logoUrl", "Logo URL", profile.logoUrl || ""],
     ["slug", "Creator slug", profile.slug],
   ];
 
@@ -40,6 +41,17 @@ export function SettingsForm({ profile }: { profile: CreatorProfile }) {
         <div className="space-y-2">
           <Label htmlFor="brandColor">Brand color</Label>
           <Input id="brandColor" name="brandColor" type="color" defaultValue={profile.brandColor} className="p-1" />
+        </div>
+        <div className="sm:col-span-2">
+          <ImageUploadField
+            name="logoUrl"
+            label="Brand logo"
+            value={logoUrl}
+            onChange={setLogoUrl}
+            purpose="logo"
+            compact
+            help="Use a square logo or brand mark with a clear background."
+          />
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="bio">Bio</Label>

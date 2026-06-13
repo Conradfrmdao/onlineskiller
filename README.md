@@ -9,18 +9,21 @@ OnlineSkiller is a subscription SaaS for creators who want to launch a digital p
 - Tailwind CSS 4 and shadcn-style primitives
 - Clerk authentication
 - Neon/PostgreSQL and Drizzle ORM
+- Vercel Blob for creator logos and cover photos
 - Mock billing or Pesapal API 3.0
 - Zod validation and Vitest
 
 ## Local setup
 
-1. Copy `.env.example` to `.env.local` and provide Clerk and Postgres values.
+1. Copy `.env.example` to `.env.local` and provide Clerk, Postgres, and Vercel Blob values.
 2. Install dependencies with `npm install`.
 3. Push the schema with `npm run db:push`.
 4. Seed templates and marketing content with `npm run db:seed`.
 5. Start the app with `npm run dev`.
 
 `BILLING_PROVIDER=mock` completes checkout through the server callback without collecting money. Use it for local development.
+
+Create a public Vercel Blob store linked to the project and set `BLOB_READ_WRITE_TOKEN`. Uploaded creator images are limited to JPG, PNG, WebP, or AVIF files smaller than 4 MB.
 
 ## Pesapal setup
 

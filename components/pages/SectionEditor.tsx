@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { useActionState, useState } from "react";
+import { ArrowDown, ArrowUp, ChevronDown, Eye, EyeOff, Trash2 } from "lucide-react";
 
 import {
   addSectionAction,
@@ -26,47 +26,74 @@ function itemsToText(section: PageSection) {
     .join("\n");
 }
 
-export function ExistingSectionEditor({ section, pageId }: { section: PageSection; pageId: string }) {
+export function ExistingSectionEditor({
+  section,
+  pageId,
+  defaultOpen = false,
+}: {
+  section: PageSection;
+  pageId: string;
+  defaultOpen?: boolean;
+}) {
   const [state, action, pending] = useActionState(updateSectionAction, initialState);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
-    <article className="panel rounded-2xl p-5">
-      <form action={action} className="space-y-4">
-        <input type="hidden" name="pageId" value={pageId} />
-        <input type="hidden" name="sectionId" value={section.id} />
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Select name="sectionType" defaultValue={section.sectionType} className="w-auto">
-            {SECTION_TYPES.map((type) => <option key={type} value={type}>{type.replaceAll("-", " ")}</option>)}
-          </Select>
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-            <input type="checkbox" name="isVisible" defaultChecked={section.isVisible} /> Visible
-          </label>
+    <details
+      className="panel group overflow-hidden rounded-2xl"
+      open={isOpen}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-600">
+          {section.isVisible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-semibold text-slate-950">{section.title}</span>
+          <span className="mt-1 block text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+            {section.sectionType.replaceAll("-", " ")} | {section.isVisible ? "Visible" : "Hidden"}
+          </span>
+        </span>
+        <ChevronDown className="size-5 text-slate-400 transition group-open:rotate-180" />
+      </summary>
+      <div className="border-t border-slate-200 p-5">
+        <form action={action} className="space-y-4">
+          <input type="hidden" name="pageId" value={pageId} />
+          <input type="hidden" name="sectionId" value={section.id} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Select name="sectionType" defaultValue={section.sectionType} className="w-auto">
+              {SECTION_TYPES.map((type) => <option key={type} value={type}>{type.replaceAll("-", " ")}</option>)}
+            </Select>
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+              <input type="checkbox" name="isVisible" defaultChecked={section.isVisible} /> Visible
+            </label>
+          </div>
+          <Input name="title" defaultValue={section.title} required />
+          <Textarea name="body" defaultValue={section.content.body || ""} placeholder="Section introduction or body" />
+          <div>
+            <Textarea name="items" defaultValue={itemsToText(section)} placeholder={"One item per line:\nItem title | Optional description"} />
+            <p className="mt-1 text-xs text-slate-500">Use one line per item and separate title from description with a vertical bar.</p>
+          </div>
+          {state.message ? <Alert variant={state.success ? "success" : "destructive"}>{state.message}</Alert> : null}
+          <Button type="submit" variant="secondary" disabled={pending}>{pending ? "Saving..." : "Save section"}</Button>
+        </form>
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+          <form action={moveSectionAction}>
+            <input type="hidden" name="pageId" value={pageId} /><input type="hidden" name="sectionId" value={section.id} />
+            <input type="hidden" name="direction" value="up" />
+            <Button type="submit" variant="ghost" size="sm"><ArrowUp /> Move up</Button>
+          </form>
+          <form action={moveSectionAction}>
+            <input type="hidden" name="pageId" value={pageId} /><input type="hidden" name="sectionId" value={section.id} />
+            <input type="hidden" name="direction" value="down" />
+            <Button type="submit" variant="ghost" size="sm"><ArrowDown /> Move down</Button>
+          </form>
+          <form action={deleteSectionAction} className="ml-auto">
+            <input type="hidden" name="pageId" value={pageId} /><input type="hidden" name="sectionId" value={section.id} />
+            <Button type="submit" variant="destructive" size="sm"><Trash2 /> Delete</Button>
+          </form>
         </div>
-        <Input name="title" defaultValue={section.title} required />
-        <Textarea name="body" defaultValue={section.content.body || ""} placeholder="Section introduction or body" />
-        <div>
-          <Textarea name="items" defaultValue={itemsToText(section)} placeholder={"One item per line:\nItem title | Optional description"} />
-          <p className="mt-1 text-xs text-slate-500">Use one line per item and separate title from description with a vertical bar.</p>
-        </div>
-        {state.message ? <Alert variant={state.success ? "success" : "destructive"}>{state.message}</Alert> : null}
-        <Button type="submit" variant="secondary" disabled={pending}>{pending ? "Saving…" : "Save section"}</Button>
-      </form>
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
-        <form action={moveSectionAction}>
-          <input type="hidden" name="pageId" value={pageId} /><input type="hidden" name="sectionId" value={section.id} />
-          <input type="hidden" name="direction" value="up" />
-          <Button type="submit" variant="ghost" size="sm"><ArrowUp /> Move up</Button>
-        </form>
-        <form action={moveSectionAction}>
-          <input type="hidden" name="pageId" value={pageId} /><input type="hidden" name="sectionId" value={section.id} />
-          <input type="hidden" name="direction" value="down" />
-          <Button type="submit" variant="ghost" size="sm"><ArrowDown /> Move down</Button>
-        </form>
-        <form action={deleteSectionAction} className="ml-auto">
-          <input type="hidden" name="pageId" value={pageId} /><input type="hidden" name="sectionId" value={section.id} />
-          <Button type="submit" variant="destructive" size="sm"><Trash2 /> Delete</Button>
-        </form>
       </div>
-    </article>
+    </details>
   );
 }
 
@@ -97,7 +124,7 @@ export function AddSectionForm({ pageId }: { pageId: string }) {
         </div>
       </div>
       {state.message ? <Alert className="mt-4" variant={state.success ? "success" : "destructive"}>{state.message}</Alert> : null}
-      <Button type="submit" className="mt-4" disabled={pending}>{pending ? "Adding…" : "Add section"}</Button>
+      <Button type="submit" className="mt-4" disabled={pending}>{pending ? "Adding..." : "Add section"}</Button>
     </form>
   );
 }

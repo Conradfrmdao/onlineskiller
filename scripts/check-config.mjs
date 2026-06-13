@@ -36,6 +36,7 @@ const databaseUrl = requireUrl("DATABASE_URL", ["postgres:", "postgresql:"]);
 const clerkPublishableKey = requirePrefix("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "pk_");
 const clerkSecretKey = requirePrefix("CLERK_SECRET_KEY", "sk_");
 const appUrl = requireUrl("NEXT_PUBLIC_APP_URL", ["http:", "https:"]);
+requireValue("BLOB_READ_WRITE_TOKEN");
 const billingProvider = (process.env.BILLING_PROVIDER || "mock").toLowerCase();
 const billingTestMode = (process.env.BILLING_TEST_MODE || "false").toLowerCase();
 const billingTestAmount = Number(process.env.BILLING_TEST_AMOUNT || "500");

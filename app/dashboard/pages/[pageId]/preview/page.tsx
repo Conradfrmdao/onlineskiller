@@ -4,7 +4,6 @@ import { ExternalLink, Gauge, Pause, Rocket } from "lucide-react";
 
 import { pausePageAction, publishPageAction } from "@/actions/page-actions";
 import { PreviewViewport } from "@/components/pages/PreviewViewport";
-import { PublicPageRenderer } from "@/components/public-page/PublicPageRenderer";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,34 +46,27 @@ export default async function PreviewPage({ params }: { params: Promise<{ pageId
               <form action={pausePageAction}><input type="hidden" name="pageId" value={pageId} /><Button type="submit" variant="outline" size="sm"><Pause /> Pause</Button></form>
             </>
           ) : (
-            <form action={publishPageAction}><input type="hidden" name="pageId" value={pageId} /><Button type="submit" size="sm"><Rocket /> Publish page</Button></form>
+            launchScore.publishReady ? (
+              <form action={publishPageAction}><input type="hidden" name="pageId" value={pageId} /><Button type="submit" size="sm"><Rocket /> Publish page</Button></form>
+            ) : (
+              <Button asChild size="sm">
+                <Link href={`/dashboard/pages/${pageId}/builder?reason=publish-blocked`}>Finish page content</Link>
+              </Button>
+            )
           )}
         </div>
       </div>
       {launchScore.suggestions.length ? (
         <div className="bg-white px-4 py-4 sm:px-6 lg:px-8">
           <Alert variant={launchScore.score >= 67 ? "default" : "warning"}>
-            <p className="font-semibold">Best next improvement</p>
+            <p className="font-semibold">
+              {launchScore.publishReady ? "Best next improvement" : "Required before publishing"}
+            </p>
             <p className="mt-1">{launchScore.suggestions[0]}</p>
           </Alert>
         </div>
       ) : null}
-      <PreviewViewport>
-        <PublicPageRenderer
-          preview
-          removableBranding={entitlements.active && entitlements.plan.removableBranding}
-          data={{
-            page: data.page,
-            creator: profile,
-            template: data.template,
-            sections: data.sections,
-            videos: data.videos,
-            modules: data.modules,
-            lessons: data.lessons,
-            paymentMethods: data.paymentMethods,
-          }}
-        />
-      </PreviewViewport>
+      <PreviewViewport previewUrl={`/p/${data.page.slug}?preview=1`} />
     </div>
   );
 }

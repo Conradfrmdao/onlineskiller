@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { updatePageAction } from "@/actions/page-actions";
 import { Alert } from "@/components/ui/alert";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUploadField } from "@/components/uploads/ImageUploadField";
 import type { CreatorPage, Template } from "@/db/schema";
 import { PAGE_TYPES, PAGE_TYPE_LABELS } from "@/lib/pages/types";
 
@@ -17,6 +18,7 @@ const initialState = { success: false, message: "" };
 
 export function PageDetailsForm({ page, templates }: { page: CreatorPage; templates: Template[] }) {
   const [state, action, pending] = useActionState(updatePageAction, initialState);
+  const [heroImageUrl, setHeroImageUrl] = useState(page.heroImageUrl || "");
 
   return (
     <form action={action} className="space-y-6">
@@ -53,6 +55,9 @@ export function PageDetailsForm({ page, templates }: { page: CreatorPage; templa
           <div className="space-y-2">
             <Label htmlFor="priceText">Price text</Label>
             <Input id="priceText" name="priceText" defaultValue={page.priceText} placeholder="$49 or Book a call" />
+            <p className="text-xs leading-5 text-slate-500">
+              Include a currency such as USD 49 or UGX 180,000. A bare number uses your profile country.
+            </p>
           </div>
         </div>
       </section>
@@ -74,9 +79,15 @@ export function PageDetailsForm({ page, templates }: { page: CreatorPage; templa
             <Label htmlFor="ctaUrl">Button URL</Label>
             <Input id="ctaUrl" name="ctaUrl" defaultValue={page.ctaUrl || ""} placeholder="https://…" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="heroImageUrl">Hero image URL</Label>
-            <Input id="heroImageUrl" name="heroImageUrl" defaultValue={page.heroImageUrl || ""} placeholder="https://…" />
+          <div className="sm:col-span-2">
+            <ImageUploadField
+              name="heroImageUrl"
+              label="Cover photo"
+              value={heroImageUrl}
+              onChange={setHeroImageUrl}
+              purpose="cover"
+              help="Use a wide, high-quality photo showing you, your product, or the result customers can achieve."
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="introVideoUrl">Intro video URL</Label>

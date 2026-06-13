@@ -102,6 +102,7 @@ export function resolveLaunchCta(
 type StarterSection = {
   type: SectionType;
   title: string;
+  isVisible?: boolean;
   content: {
     body?: string;
     items?: Array<{ title: string; description?: string }>;
@@ -114,28 +115,38 @@ const sharedFaq: StarterSection = {
   content: {
     items: [
       { title: "How do I get started?", description: "Use the main button on this page to take the next step." },
-      { title: "Who is this for?", description: "Update this answer with the customer who benefits most from your offer." },
+      { title: "Can I ask a question first?", description: "Use the contact option on this page to speak directly with the creator." },
     ],
   },
 };
 
 const sharedTestimonials: StarterSection = {
   type: "testimonials",
-  title: "What people say",
+  title: "Customer results",
+  isVisible: false,
   content: {
-    items: [{ title: "Add your first testimonial", description: "Share a real customer result here." }],
+    body: "Add verified customer feedback here before making this section visible.",
+    items: [],
   },
 };
 
-export function getStarterSections(pageType: PageType, title: string): StarterSection[] {
+export function getStarterSections(
+  pageType: PageType,
+  title: string,
+  description = "",
+  category = "",
+): StarterSection[] {
+  const niche = category.trim() || "this goal";
+  const offerSummary =
+    description.trim() || `${title} gives customers a practical way to move forward with confidence.`;
   const benefits: StarterSection = {
     type: "benefits",
-    title: "Why this is for you",
+    title: `Why choose ${title}`,
     content: {
       items: [
-        { title: "Clear result", description: `Show the main result people can get from ${title}.` },
-        { title: "Practical next steps", description: "Explain how your offer helps people move forward quickly." },
-        { title: "Support that matters", description: "Describe the guidance, resources, or access included." },
+        { title: "Built around a clear outcome", description: offerSummary },
+        { title: "A practical next step", description: `Move forward with a focused ${niche} offer instead of scattered information.` },
+        { title: "Direct access", description: "Use the main action on this page to ask questions or get started." },
       ],
     },
   };
@@ -144,7 +155,7 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
     type: "who-it-is-for",
     title: "Who this is for",
     content: {
-      body: "Describe the person who needs this offer most and the situation they are in today.",
+      body: `For people interested in ${niche} who want a clear, practical path forward.`,
     },
   };
 
@@ -156,9 +167,9 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "What you will learn",
         content: {
           items: [
-            { title: "Module 1", description: "Introduce the first practical outcome." },
-            { title: "Module 2", description: "Build confidence with guided practice." },
-            { title: "Module 3", description: "Help learners apply the skill." },
+            { title: "Understand the essentials", description: `Build a strong foundation for ${niche}.` },
+            { title: "Apply what you learn", description: "Turn the core ideas into practical action." },
+            { title: "Create your next-step plan", description: "Leave with a clear way to keep making progress." },
           ],
         },
       },
@@ -171,8 +182,8 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "What is inside",
         content: {
           items: [
-            { title: "Practical guide", description: "Explain the core chapters or framework." },
-            { title: "Action resources", description: "List worksheets, checklists, or bonuses." },
+            { title: "A focused guide", description: offerSummary },
+            { title: "Practical takeaways", description: `Use the ideas to take confident action in ${niche}.` },
           ],
         },
       },
@@ -185,8 +196,8 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "How we will work together",
         content: {
           items: [
-            { title: "Focused sessions", description: "Describe your calls, reviews, or coaching format." },
-            { title: "Personal action plan", description: "Explain the support between sessions." },
+            { title: "Focused guidance", description: `Get support centered on your ${niche} goals.` },
+            { title: "A personal action plan", description: "Turn each conversation into a clear next step." },
           ],
         },
       },
@@ -198,9 +209,9 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "What the service includes",
         content: {
           items: [
-            { title: "Clear scope", description: "List the main deliverable." },
-            { title: "Simple process", description: "Explain how the client works with you." },
-            { title: "Professional delivery", description: "Set expectations for timing and quality." },
+            { title: "A clear scope", description: offerSummary },
+            { title: "A simple process", description: "Know the next step from the first conversation onward." },
+            { title: "Professional delivery", description: `Get focused support for your ${niche} needs.` },
           ],
         },
       },
@@ -212,9 +223,9 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "Workshop details",
         content: {
           items: [
-            { title: "Date and time", description: "Add the workshop schedule." },
-            { title: "Location or link", description: "Explain where attendees will join." },
-            { title: "Seats and deadline", description: "Add capacity and the registration deadline." },
+            { title: "A focused learning experience", description: offerSummary },
+            { title: "Practical participation", description: "Work through the topic with clear examples and next steps." },
+            { title: "Direct registration", description: "Use the main button to view availability and secure your place." },
           ],
         },
       },
@@ -226,8 +237,8 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "Templates included",
         content: {
           items: [
-            { title: "Ready-to-use files", description: "List the templates and formats included." },
-            { title: "Simple instructions", description: "Explain how buyers customize them." },
+            { title: "Ready-to-use resources", description: offerSummary },
+            { title: "Easy to adapt", description: `Put the resources to work for your own ${niche} goals.` },
           ],
         },
       },
@@ -240,8 +251,8 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "Inside the community",
         content: {
           items: [
-            { title: "Member conversations", description: "Describe the access and support." },
-            { title: "Exclusive resources", description: "List events, lessons, or downloads." },
+            { title: "A focused member space", description: `Connect around shared ${niche} goals.` },
+            { title: "Ongoing momentum", description: "Keep learning, sharing, and taking practical action." },
           ],
         },
       },
@@ -254,8 +265,8 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
         title: "Your consultation",
         content: {
           items: [
-            { title: "Focused review", description: "Explain what you assess before or during the call." },
-            { title: "Clear recommendations", description: "Describe what the client leaves with." },
+            { title: "A focused review", description: offerSummary },
+            { title: "Clear recommendations", description: "Leave the conversation knowing what to do next." },
           ],
         },
       },
@@ -268,27 +279,77 @@ export function getStarterSections(pageType: PageType, title: string): StarterSe
 export function getLaunchScore(input: {
   page: Pick<
     CreatorPage,
-    "title" | "subtitle" | "description" | "priceText" | "ctaText" | "ctaUrl" | "whatsappEnabled" | "introVideoUrl"
+    "title" | "subtitle" | "description" | "priceText" | "ctaText" | "ctaUrl" | "whatsappEnabled" | "introVideoUrl" | "heroImageUrl"
   >;
   sections: Array<Pick<PageSection, "sectionType" | "content" | "isVisible">>;
   videos: Array<Pick<PageVideo, "videoUrl">>;
 }) {
+  const placeholderPhrases = [
+    "add your first",
+    "add verified",
+    "update this",
+    "describe the",
+    "explain the",
+    "list the",
+    "introduce the",
+    "share a real",
+    "show the main",
+    "set expectations",
+    "add the workshop",
+    "add capacity",
+  ];
+  const visibleSections = input.sections.filter((section) => section.isVisible);
+  const containsPlaceholder = visibleSections.some((section) => {
+    const content = [
+      section.content.body || "",
+      ...(section.content.items || []).flatMap((item) => [
+        item.title,
+        item.description || "",
+      ]),
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return placeholderPhrases.some((phrase) => content.includes(phrase));
+  });
+  const hasMeaningfulSection = visibleSections.some(
+    (section) =>
+      Boolean(section.content.body?.trim()) ||
+      (section.content.items || []).some(
+        (item) => Boolean(item.title.trim() || item.description?.trim()),
+      ),
+  );
   const checks = [
     {
       complete: Boolean(input.page.title && (input.page.subtitle || input.page.description)),
       suggestion: "Add a clear headline and short description.",
+      blocking: true,
     },
     {
       complete: Boolean(input.page.priceText),
-      suggestion: "Add a price or explain how customers should request a quote.",
+      suggestion: "Add a price with its currency, or explain how customers request a quote.",
+      blocking: false,
     },
     {
       complete: Boolean(input.page.ctaText && (input.page.ctaUrl || input.page.whatsappEnabled)),
       suggestion: "Add a working call-to-action destination.",
+      blocking: true,
     },
     {
-      complete: Boolean(input.page.introVideoUrl || input.videos.some((video) => video.videoUrl)),
-      suggestion: "Add an intro, demo, or testimonial video.",
+      complete: Boolean(
+        input.page.heroImageUrl ||
+        input.page.introVideoUrl ||
+        input.videos.some((video) => video.videoUrl),
+      ),
+      suggestion: "Add a cover photo, demo, or testimonial video.",
+      blocking: false,
+    },
+    {
+      complete: hasMeaningfulSection && !containsPlaceholder,
+      suggestion: containsPlaceholder
+        ? "Replace the remaining starter instructions with your real offer details."
+        : "Add at least one visible section with useful customer information.",
+      blocking: true,
     },
     {
       complete: input.sections.some(
@@ -297,7 +358,8 @@ export function getLaunchScore(input: {
           section.sectionType === "testimonials" &&
           (section.content.items || []).some((item) => !item.title.toLowerCase().startsWith("add your first")),
       ),
-      suggestion: "Replace the placeholder with a real testimonial.",
+      suggestion: "Add a real testimonial when you have verified customer feedback.",
+      blocking: false,
     },
     {
       complete: input.sections.some(
@@ -307,12 +369,18 @@ export function getLaunchScore(input: {
           (section.content.items || []).length > 0,
       ),
       suggestion: "Answer at least one common customer question.",
+      blocking: false,
     },
   ];
   const completed = checks.filter((check) => check.complete).length;
+  const blockingSuggestions = checks
+    .filter((check) => check.blocking && !check.complete)
+    .map((check) => check.suggestion);
 
   return {
     score: Math.round((completed / checks.length) * 100),
     suggestions: checks.filter((check) => !check.complete).map((check) => check.suggestion),
+    blockingSuggestions,
+    publishReady: blockingSuggestions.length === 0,
   };
 }

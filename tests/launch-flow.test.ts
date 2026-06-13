@@ -5,10 +5,17 @@ import { getLaunchScore, getStarterSections, resolveLaunchCta } from "@/lib/page
 describe("guided launch flow", () => {
   it("creates useful starter sections for every offer", () => {
     const sections = getStarterSections("digital-product", "Creator Toolkit");
+    const visibleCopy = sections
+      .filter((section) => section.isVisible !== false)
+      .map((section) => `${section.title} ${section.content.body} ${JSON.stringify(section.content.items)}`)
+      .join(" ")
+      .toLowerCase();
 
     expect(sections.length).toBeGreaterThanOrEqual(4);
     expect(sections.map((section) => section.type)).toContain("benefits");
     expect(sections.every((section) => section.title.length > 0)).toBe(true);
+    expect(visibleCopy).not.toContain("replace this");
+    expect(visibleCopy).not.toContain("update this");
   });
 
   it("builds a WhatsApp CTA from the creator profile", () => {
@@ -38,6 +45,7 @@ describe("guided launch flow", () => {
         ctaUrl: "https://example.com",
         whatsappEnabled: false,
         introVideoUrl: "https://youtube.com/watch?v=test",
+        heroImageUrl: "https://example.com/cover.jpg",
       },
       sections: [
         {
@@ -63,11 +71,14 @@ describe("guided launch flow", () => {
         ctaUrl: null,
         whatsappEnabled: false,
         introVideoUrl: null,
+        heroImageUrl: null,
       },
       sections: [],
       videos: [],
     });
 
     expect(complete.score).toBeGreaterThan(empty.score);
+    expect(complete.publishReady).toBe(true);
+    expect(empty.publishReady).toBe(false);
   });
 });
