@@ -12,8 +12,14 @@ import { getCreatorEntitlements } from "@/lib/billing/subscription";
 import { getLaunchScore } from "@/lib/pages/launch-flow";
 import { getPageStudioData } from "@/lib/pages/queries";
 
-export default async function PreviewPage({ params }: { params: Promise<{ pageId: string }> }) {
-  const { pageId } = await params;
+export default async function PreviewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ pageId: string }>;
+  searchParams: Promise<{ reason?: string }>;
+}) {
+  const [{ pageId }, query] = await Promise.all([params, searchParams]);
   const { profile } = await requireCreator();
   const [data, entitlements] = await Promise.all([
     getPageStudioData(pageId, profile.id),
@@ -67,6 +73,14 @@ export default async function PreviewPage({ params }: { params: Promise<{ pageId
         </div>
       ) : null}
       <PreviewViewport previewUrl={`/p/${data.page.slug}?preview=1`} />
+      {query.reason === "moderated" || data.page.moderationStatus === "taken_down" ? (
+        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl">
+          <Alert variant="destructive">
+            <p className="font-semibold">This page was taken down by OnlineSkiller administration.</p>
+            <p className="mt-1">{data.page.moderationReason || "Contact support if you need help resolving this moderation action."}</p>
+          </Alert>
+        </div>
+      ) : null}
     </div>
   );
 }

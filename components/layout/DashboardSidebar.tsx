@@ -8,8 +8,10 @@ import {
   Files,
   LayoutTemplate,
   LayoutDashboard,
+  LifeBuoy,
   Megaphone,
   Settings,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 
@@ -24,6 +26,7 @@ const items = [
   { name: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Support", href: "/dashboard/support", icon: LifeBuoy },
 ];
 
 function isCurrent(pathname: string, href: string) {
@@ -34,7 +37,7 @@ function isCurrent(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -61,6 +64,15 @@ export function DashboardSidebar() {
               </Link>
             );
           })}
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              className="mt-3 flex items-center gap-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-300/20"
+            >
+              <ShieldCheck className="size-4" />
+              Admin console
+            </Link>
+          ) : null}
         </nav>
         <div className="mt-3 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-3">
           <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Eye, FilePlus2, Files, LayoutTemplate, Megaphone, MoreHorizontal, Pause, Pencil, Trash2, WalletCards } from "lucide-react";
+import { Eye, FilePlus2, Files, LayoutTemplate, Megaphone, MoreHorizontal, Pause, Pencil, Trash2, UserRoundCheck, WalletCards } from "lucide-react";
 
 import { deletePageAction, pausePageAction } from "@/actions/page-actions";
 import { pages, templates } from "@/db/schema";
@@ -54,6 +54,7 @@ export default async function PagesPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant={page.isLive ? "success" : page.status === "paused" ? "warning" : "secondary"}>{page.status}</Badge>
+                      {page.moderationStatus === "taken_down" ? <Badge variant="destructive">admin takedown</Badge> : null}
                       <span className="text-xs text-slate-500">
                         {page.pageType.replaceAll("-", " ")} · {template?.name || "Default style"}
                       </span>
@@ -63,7 +64,7 @@ export default async function PagesPage() {
                   </div>
                   <MoreHorizontal className="size-5 text-slate-400" />
                 </div>
-                <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="mt-5 grid grid-cols-3 gap-3">
                   <div className="rounded-xl bg-slate-50 p-3">
                     <p className="text-xl font-bold">{analytics[index].views}</p>
                     <p className="text-xs text-slate-500">Page views</p>
@@ -72,10 +73,15 @@ export default async function PagesPage() {
                     <p className="text-xl font-bold">{analytics[index].ctaClicks}</p>
                     <p className="text-xs text-slate-500">CTA clicks</p>
                   </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <p className="text-xl font-bold">{analytics[index].requests}</p>
+                    <p className="text-xs text-slate-500">Requests</p>
+                  </div>
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Button asChild size="sm"><Link href={`/dashboard/pages/${page.id}/edit`}><Pencil /> Edit</Link></Button>
                   <Button asChild variant="outline" size="sm"><Link href={`/dashboard/pages/${page.id}/payments`}><WalletCards /> Payments</Link></Button>
+                  <Button asChild variant="outline" size="sm"><Link href={`/dashboard/pages/${page.id}/customers`}><UserRoundCheck /> Customers</Link></Button>
                   <Button asChild variant="outline" size="sm"><Link href={`/dashboard/pages/${page.id}/preview`}><Eye /> Preview</Link></Button>
                   <Button asChild variant="outline" size="sm"><Link href="/dashboard/marketing"><Megaphone /> Marketing</Link></Button>
                   {page.isLive ? (

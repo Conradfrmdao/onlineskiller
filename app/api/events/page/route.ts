@@ -35,7 +35,14 @@ export async function POST(request: Request) {
     .innerJoin(creatorProfiles, eq(creatorProfiles.id, pages.creatorId))
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
     .leftJoin(subscriptions, eq(subscriptions.creatorId, creatorProfiles.id))
-    .where(and(eq(pages.id, pageId), eq(pages.isLive, true), eq(pages.status, "live")))
+    .where(
+      and(
+        eq(pages.id, pageId),
+        eq(pages.isLive, true),
+        eq(pages.status, "live"),
+        eq(pages.moderationStatus, "active"),
+      ),
+    )
     .limit(1);
   if (!pageRows[0] || pageRows[0].userStatus !== "active" || !hasValidAccess(pageRows[0].subscription)) {
     return NextResponse.json({ ok: false }, { status: 404 });

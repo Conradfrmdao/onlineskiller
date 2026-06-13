@@ -102,6 +102,7 @@ try {
     "page_videos",
     "course_modules",
     "course_lessons",
+    "customer_requests",
     "templates",
     "subscriptions",
     "payments",
@@ -115,6 +116,8 @@ try {
     "page_events",
     "audit_logs",
     "platform_settings",
+    "support_tickets",
+    "support_messages",
     "idempotency_keys",
   ];
   const rows = await database`select table_name from information_schema.tables where table_schema = 'public'`;

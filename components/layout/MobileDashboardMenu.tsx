@@ -10,10 +10,12 @@ import {
   Files,
   LayoutDashboard,
   LayoutTemplate,
+  LifeBuoy,
   Menu,
   Megaphone,
   Plus,
   Settings,
+  ShieldCheck,
   X,
 } from "lucide-react";
 
@@ -29,6 +31,7 @@ const items = [
   { name: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Support", href: "/dashboard/support", icon: LifeBuoy },
 ];
 
 function isCurrent(pathname: string, href: string) {
@@ -37,7 +40,7 @@ function isCurrent(pathname: string, href: string) {
     : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MobileDashboardMenu() {
+export function MobileDashboardMenu({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menu = open ? (
@@ -90,6 +93,16 @@ export function MobileDashboardMenu() {
               </Link>
             );
           })}
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="mt-3 flex items-center gap-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm font-semibold text-amber-100"
+            >
+              <ShieldCheck className="size-5" />
+              Admin console
+            </Link>
+          ) : null}
         </nav>
       </aside>
     </div>

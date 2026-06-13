@@ -202,12 +202,15 @@ export function PublicPageRenderer({
   const checkoutUrl = hasEnabledPaymentMethods(paymentMethods)
     ? `/p/${page.slug}/checkout${preview ? "?preview=1" : ""}`
     : "";
-  const ctaUrl =
+  const directCtaUrl =
     checkoutUrl ||
     page.ctaUrl ||
     (page.whatsappEnabled
       ? whatsappUrl(creator.whatsappNumber, `Hi ${creator.displayName}, I am interested in ${page.title}.`)
       : "");
+  const ctaUrl = directCtaUrl
+    ? `/p/${page.slug}/request${preview ? "?preview=1" : ""}`
+    : "";
   const visibleSections = sections.filter((section) => section.isVisible);
   const introEmbed = page.introVideoUrl
     ? getEmbedUrl(page.introVideoUrl, (page.introVideoProvider || undefined) as VideoProvider | undefined)

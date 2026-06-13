@@ -19,7 +19,7 @@ export default async function AdminSubscriptionsPage() {
     .orderBy(asc(creatorProfiles.businessName));
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Administration" title="Subscriptions" description="Grant trials, activate plans, extend access, or deactivate a creator manually." />
+      <PageHeader eyebrow="Administration" title="Subscriptions" description="Upgrade or downgrade plans, grant trials, extend an existing period, replace dates, or deactivate access." />
       <div className="panel overflow-hidden rounded-2xl">
         <Table>
           <TableHeader><TableRow><TableHead>Creator</TableHead><TableHead>Current</TableHead><TableHead>Period end</TableHead><TableHead>Manual update</TableHead></TableRow></TableHeader>
@@ -27,12 +27,13 @@ export default async function AdminSubscriptionsPage() {
             <TableRow key={creator.id}>
               <TableCell><p className="font-semibold">{creator.businessName}</p><p className="text-xs text-slate-500">{user.email}</p></TableCell>
               <TableCell><div className="flex gap-2"><Badge variant="secondary">{subscription?.planName || "starter"}</Badge><Badge variant={subscription?.status === "active" || subscription?.status === "trialing" ? "success" : "warning"}>{subscription?.status || "inactive"}</Badge></div></TableCell>
-              <TableCell>{subscription?.currentPeriodEnd?.toLocaleDateString() || "—"}</TableCell>
+              <TableCell>{subscription?.currentPeriodEnd?.toLocaleDateString() || "-"}</TableCell>
               <TableCell>
-                <form action={updateSubscriptionAdminAction} className="grid min-w-[34rem] grid-cols-[1fr_1fr_90px_auto] gap-2">
+                <form action={updateSubscriptionAdminAction} className="grid min-w-[44rem] grid-cols-[1fr_1fr_1.2fr_90px_auto] gap-2">
                   <input type="hidden" name="creatorId" value={creator.id} />
                   <Select name="planName" defaultValue={subscription?.planName || "starter"}><option value="starter">Starter</option><option value="growth">Growth</option><option value="pro">Pro</option></Select>
                   <Select name="status" defaultValue={subscription?.status || "active"}><option value="active">active</option><option value="trialing">trialing</option><option value="inactive">inactive</option><option value="expired">expired</option></Select>
+                  <Select name="periodMode" defaultValue={subscription?.currentPeriodEnd ? "extend" : "replace"}><option value="extend">Extend current period</option><option value="replace">Start from today</option></Select>
                   <Input name="months" type="number" min="1" max="24" defaultValue="1" aria-label="Months" />
                   <Button type="submit" size="sm">Apply</Button>
                 </form>

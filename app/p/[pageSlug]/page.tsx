@@ -37,6 +37,7 @@ export default async function PublicCreatorPage({
     !ownerPreview &&
     (
       data.user.status !== "active" ||
+      data.page.moderationStatus !== "active" ||
       data.page.status !== "live" ||
       !data.page.isLive ||
       !hasValidAccess(data.subscription)

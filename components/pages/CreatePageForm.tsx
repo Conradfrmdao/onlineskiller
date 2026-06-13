@@ -47,11 +47,15 @@ const preferredTemplates = [
 ];
 const templateImages: Record<string, string> = {
   "digital-hustle": "/landing/offer-builder.jpg",
-  "luxury-coach": "/landing/launch-roadmap.jpg",
+  "luxury-coach": "/templates/luxury-coach.jpg",
   "clean-academy": "/landing/page-studio.jpg",
-  "bold-seller": "/landing/marketing-room.jpg",
-  "ebook-launch": "/landing/offer-builder.jpg",
+  "creator-pro": "/landing/marketing-room.jpg",
+  "bold-seller": "/templates/bold-seller.jpg",
+  "tech-mentor": "/templates/tech-mentor.jpg",
   "service-expert": "/landing/launch-roadmap.jpg",
+  "ebook-launch": "/templates/ebook-launch.jpg",
+  "workshop-page": "/templates/workshop-page.jpg",
+  "premium-consultant": "/templates/premium-consultant.jpg",
 };
 
 const pageTypeDetails: Record<

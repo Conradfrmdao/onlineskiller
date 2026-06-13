@@ -113,6 +113,8 @@ export const pages = pgTable(
     introVideoProvider: varchar("intro_video_provider", { length: 40 }),
     status: varchar("status", { length: 30 }).notNull().default("draft"),
     isLive: boolean("is_live").notNull().default(false),
+    moderationStatus: varchar("moderation_status", { length: 30 }).notNull().default("active"),
+    moderationReason: text("moderation_reason"),
     publishedAt: timestamp("published_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -120,6 +122,7 @@ export const pages = pgTable(
   (table) => [
     index("pages_creator_id_idx").on(table.creatorId),
     index("pages_status_idx").on(table.status),
+    index("pages_moderation_status_idx").on(table.moderationStatus),
     index("pages_live_idx").on(table.isLive),
     index("pages_created_at_idx").on(table.createdAt),
   ],
@@ -197,6 +200,7 @@ export const courseModules = pgTable(
       .references(() => pages.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 180 }).notNull(),
     description: text("description").notNull().default(""),
+    content: text("content").notNull().default(""),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -216,6 +220,7 @@ export const courseLessons = pgTable(
       .references(() => pages.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 180 }).notNull(),
     description: text("description").notNull().default(""),
+    content: text("content").notNull().default(""),
     videoUrl: text("video_url"),
     videoProvider: varchar("video_provider", { length: 40 }),
     duration: varchar("duration", { length: 30 }).notNull().default(""),
@@ -228,6 +233,43 @@ export const courseLessons = pgTable(
   (table) => [
     index("course_lessons_module_id_idx").on(table.moduleId),
     index("course_lessons_page_id_idx").on(table.pageId),
+  ],
+);
+
+export const customerRequests = pgTable(
+  "customer_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    pageId: uuid("page_id")
+      .notNull()
+      .references(() => pages.id, { onDelete: "cascade" }),
+    creatorId: uuid("creator_id")
+      .notNull()
+      .references(() => creatorProfiles.id, { onDelete: "cascade" }),
+    customerName: varchar("customer_name", { length: 160 }).notNull(),
+    customerEmail: varchar("customer_email", { length: 255 }).notNull().default(""),
+    customerPhone: varchar("customer_phone", { length: 50 }).notNull().default(""),
+    message: text("message").notNull().default(""),
+    source: varchar("source", { length: 40 }).notNull().default("public_page"),
+    paymentMethod: varchar("payment_method", { length: 80 }).notNull().default(""),
+    paymentReference: varchar("payment_reference", { length: 180 }).notNull().default(""),
+    paymentStatus: varchar("payment_status", { length: 30 }).notNull().default("pending"),
+    accessStatus: varchar("access_status", { length: 30 }).notNull().default("pending"),
+    fulfillmentStatus: varchar("fulfillment_status", { length: 30 }).notNull().default("pending"),
+    creatorNote: text("creator_note").notNull().default(""),
+    deliveryUrl: text("delivery_url"),
+    accessToken: uuid("access_token").defaultRandom().notNull().unique(),
+    accessExpiresAt: timestamp("access_expires_at"),
+    lastContactedAt: timestamp("last_contacted_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("customer_requests_page_id_idx").on(table.pageId),
+    index("customer_requests_creator_id_idx").on(table.creatorId),
+    index("customer_requests_payment_status_idx").on(table.paymentStatus),
+    index("customer_requests_access_status_idx").on(table.accessStatus),
+    index("customer_requests_created_at_idx").on(table.createdAt),
   ],
 );
 
@@ -485,6 +527,46 @@ export const platformSettings = pgTable(
   (table) => [index("platform_settings_key_idx").on(table.key)],
 );
 
+export const supportTickets = pgTable(
+  "support_tickets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    subject: varchar("subject", { length: 180 }).notNull(),
+    category: varchar("category", { length: 60 }).notNull().default("general"),
+    status: varchar("status", { length: 30 }).notNull().default("open"),
+    priority: varchar("priority", { length: 30 }).notNull().default("normal"),
+    resolvedAt: timestamp("resolved_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("support_tickets_user_id_idx").on(table.userId),
+    index("support_tickets_status_idx").on(table.status),
+    index("support_tickets_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const supportMessages = pgTable(
+  "support_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ticketId: uuid("ticket_id")
+      .notNull()
+      .references(() => supportTickets.id, { onDelete: "cascade" }),
+    senderType: varchar("sender_type", { length: 20 }).notNull(),
+    senderId: varchar("sender_id", { length: 255 }).notNull(),
+    message: text("message").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("support_messages_ticket_id_idx").on(table.ticketId),
+    index("support_messages_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export const idempotencyKeys = pgTable(
   "idempotency_keys",
   {
@@ -507,8 +589,11 @@ export type PageSection = typeof pageSections.$inferSelect;
 export type PageVideo = typeof pageVideos.$inferSelect;
 export type CourseModule = typeof courseModules.$inferSelect;
 export type CourseLesson = typeof courseLessons.$inferSelect;
+export type CustomerRequest = typeof customerRequests.$inferSelect;
 export type Template = typeof templates.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type MarketingAsset = typeof marketingAssets.$inferSelect;
 export type MarketingStrategy = typeof marketingStrategies.$inferSelect;
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type SupportMessage = typeof supportMessages.$inferSelect;

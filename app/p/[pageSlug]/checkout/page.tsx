@@ -54,6 +54,7 @@ export default async function PublicCheckoutPage({
   const ownerPreview = previewRequested && userId === data.user.clerkUserId;
   const publiclyAvailable =
     data.user.status === "active" &&
+    data.page.moderationStatus === "active" &&
     data.page.status === "live" &&
     data.page.isLive &&
     hasValidAccess(data.subscription);

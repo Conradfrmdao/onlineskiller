@@ -39,6 +39,36 @@ export async function pausePageAdminAction(formData: FormData) {
   revalidatePath("/admin/pages");
 }
 
+export async function moderatePageAdminAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const pageId = String(formData.get("pageId") || "");
+  const requestedAction = String(formData.get("moderationAction") || "take_down");
+  const takeDown = requestedAction !== "restore";
+  const moderationReason = String(formData.get("moderationReason") || "").trim().slice(0, 2000);
+
+  await db
+    .update(pages)
+    .set({
+      moderationStatus: takeDown ? "taken_down" : "active",
+      moderationReason: takeDown ? moderationReason || "Removed by platform administration." : null,
+      status: takeDown ? "taken_down" : "paused",
+      isLive: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(pages.id, pageId));
+  await writeAuditLog(db, {
+    actorType: "admin",
+    actorId: admin.userId,
+    action: takeDown ? "page.taken_down" : "page.restored",
+    entityType: "page",
+    entityId: pageId,
+    metadata: { moderationReason },
+  });
+
+  revalidatePath("/admin/pages");
+  revalidatePath("/dashboard/pages");
+}
+
 function templateConfig(accent: string): TemplateConfig {
   return {
     theme: { background: "#f4f7fb", surface: "#ffffff", text: "#071426", muted: "#657086", accent },
@@ -183,10 +213,26 @@ export async function updateSubscriptionAdminAction(formData: FormData) {
   const creatorId = String(formData.get("creatorId") || "");
   const requestedPlan = String(formData.get("planName") || "starter");
   const planName = isPlanName(requestedPlan) ? requestedPlan : "starter";
-  const status = String(formData.get("status") || "active");
+  const requestedStatus = String(formData.get("status") || "active");
+  const status = ["active", "trialing", "inactive", "expired"].includes(requestedStatus)
+    ? requestedStatus
+    : "inactive";
   const months = Math.min(24, Math.max(1, Number(formData.get("months") || 1)));
-  const start = new Date();
-  let end = start;
+  const periodMode = formData.get("periodMode") === "extend" ? "extend" : "replace";
+  const existingRows = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.creatorId, creatorId))
+    .limit(1);
+  const existing = existingRows[0];
+  const now = new Date();
+  const retainsAccess = status === "active" || status === "trialing";
+  const canExtend =
+    periodMode === "extend" &&
+    existing?.currentPeriodEnd &&
+    existing.currentPeriodEnd > now;
+  const start = canExtend ? existing.currentPeriodStart || now : now;
+  let end = canExtend ? existing.currentPeriodEnd! : now;
   for (let index = 0; index < months; index += 1) end = addBillingMonth(end);
 
   await db
@@ -196,8 +242,8 @@ export async function updateSubscriptionAdminAction(formData: FormData) {
       planName,
       provider: "manual",
       status,
-      currentPeriodStart: status === "inactive" || status === "expired" ? null : start,
-      currentPeriodEnd: status === "inactive" || status === "expired" ? null : end,
+      currentPeriodStart: retainsAccess ? start : null,
+      currentPeriodEnd: retainsAccess ? end : null,
     })
     .onConflictDoUpdate({
       target: subscriptions.creatorId,
@@ -205,14 +251,14 @@ export async function updateSubscriptionAdminAction(formData: FormData) {
         planName,
         provider: "manual",
         status,
-        currentPeriodStart: status === "inactive" || status === "expired" ? null : start,
-        currentPeriodEnd: status === "inactive" || status === "expired" ? null : end,
+        currentPeriodStart: retainsAccess ? start : null,
+        currentPeriodEnd: retainsAccess ? end : null,
         recurringEnabled: false,
         cancelAtPeriodEnd: false,
         updatedAt: new Date(),
       },
     });
-  await writeAuditLog(db, { actorType: "admin", actorId: admin.userId, action: "subscription.updated", entityType: "creator_profile", entityId: creatorId, metadata: { planName, status, months } });
+  await writeAuditLog(db, { actorType: "admin", actorId: admin.userId, action: "subscription.updated", entityType: "creator_profile", entityId: creatorId, metadata: { planName, status, months, periodMode } });
   revalidatePath("/admin/subscriptions");
   revalidatePath("/dashboard/billing");
 }

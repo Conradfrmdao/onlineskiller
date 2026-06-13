@@ -14,6 +14,7 @@ export function PageStudioNav({ pageId, pageType }: { pageId: string; pageType: 
     ["Videos", `/dashboard/pages/${pageId}/videos`],
     ...(pageType === "online-course" ? [["Lessons", `/dashboard/pages/${pageId}/lessons`]] : []),
     ["Payments", `/dashboard/pages/${pageId}/payments`],
+    ["Customers", `/dashboard/pages/${pageId}/customers`],
     ["Preview", `/dashboard/pages/${pageId}/preview`],
   ];
 

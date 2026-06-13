@@ -6,6 +6,7 @@ import {
   courseLessons,
   courseModules,
   creatorProfiles,
+  customerRequests,
   pageEvents,
   pagePaymentMethods,
   pageSections,
@@ -84,7 +85,7 @@ export async function getPublicPageBySlug(slug: string) {
 }
 
 export async function getPageAnalytics(pageId: string) {
-  const [views, ctas] = await Promise.all([
+  const [views, ctas, requests] = await Promise.all([
     db
       .select({ total: count() })
       .from(pageEvents)
@@ -93,10 +94,15 @@ export async function getPageAnalytics(pageId: string) {
       .select({ total: count() })
       .from(pageEvents)
       .where(sql`${pageEvents.pageId} = ${pageId} and ${pageEvents.eventType} = 'cta_click'`),
+    db
+      .select({ total: count() })
+      .from(customerRequests)
+      .where(eq(customerRequests.pageId, pageId)),
   ]);
 
   return {
     views: Number(views[0]?.total || 0),
     ctaClicks: Number(ctas[0]?.total || 0),
+    requests: Number(requests[0]?.total || 0),
   };
 }

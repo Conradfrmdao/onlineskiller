@@ -6,16 +6,16 @@ import type { TemplateSeed } from "@/lib/pages/template-seeds";
 import { cn } from "@/lib/utils";
 
 const previewImages: Record<string, string> = {
-  "bold-seller": "/landing/offer-builder.jpg",
   "clean-academy": "/landing/page-studio.jpg",
   "creator-pro": "/landing/marketing-room.jpg",
-  "digital-hustle": "/landing/page-studio.jpg",
-  "ebook-launch": "/landing/offer-builder.jpg",
-  "luxury-coach": "/landing/marketing-room.jpg",
-  "premium-consultant": "/landing/launch-roadmap.jpg",
+  "digital-hustle": "/landing/offer-builder.jpg",
+  "ebook-launch": "/templates/ebook-launch.jpg",
+  "luxury-coach": "/templates/luxury-coach.jpg",
+  "premium-consultant": "/templates/premium-consultant.jpg",
   "service-expert": "/landing/launch-roadmap.jpg",
-  "tech-mentor": "/landing/page-studio.jpg",
-  "workshop-page": "/landing/marketing-room.jpg",
+  "tech-mentor": "/templates/tech-mentor.jpg",
+  "workshop-page": "/templates/workshop-page.jpg",
+  "bold-seller": "/templates/bold-seller.jpg",
 };
 
 export function TemplatePreview({

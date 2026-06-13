@@ -394,13 +394,40 @@ export async function addModuleAction(formData: FormData) {
   const pageId = String(formData.get("pageId") || "");
   await requireOwnedPage(pageId, profile.id);
   const title = String(formData.get("title") || "").trim().slice(0, 180);
+  const description = String(formData.get("description") || "").trim().slice(0, 3000);
+  const content = String(formData.get("content") || "").trim().slice(0, 50000);
 
   if (!title) {
     return;
   }
 
   const rows = await db.select({ total: count() }).from(courseModules).where(eq(courseModules.pageId, pageId));
-  await db.insert(courseModules).values({ pageId, title, sortOrder: Number(rows[0]?.total || 0) });
+  await db.insert(courseModules).values({
+    pageId,
+    title,
+    description,
+    content,
+    sortOrder: Number(rows[0]?.total || 0),
+  });
+  revalidatePath(`/dashboard/pages/${pageId}/lessons`);
+}
+
+export async function updateModuleAction(formData: FormData) {
+  const { profile } = await requireCreator();
+  const pageId = String(formData.get("pageId") || "");
+  const moduleId = String(formData.get("moduleId") || "");
+  await requireOwnedPage(pageId, profile.id);
+
+  await db
+    .update(courseModules)
+    .set({
+      title: String(formData.get("title") || "").trim().slice(0, 180),
+      description: String(formData.get("description") || "").trim().slice(0, 3000),
+      content: String(formData.get("content") || "").trim().slice(0, 50000),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(courseModules.id, moduleId), eq(courseModules.pageId, pageId)));
+
   revalidatePath(`/dashboard/pages/${pageId}/lessons`);
 }
 
@@ -432,6 +459,7 @@ export async function addLessonAction(formData: FormData) {
     pageId,
     title,
     description: String(formData.get("description") || "").trim().slice(0, 1000),
+    content: String(formData.get("content") || "").trim().slice(0, 50000),
     videoUrl: videoUrl || null,
     videoProvider: videoUrl ? detectVideoProvider(videoUrl) : null,
     resourceUrl: cleanHttpUrl(String(formData.get("resourceUrl") || "")) || null,
@@ -439,6 +467,31 @@ export async function addLessonAction(formData: FormData) {
     isPreview: formData.get("isPreview") === "on",
     sortOrder: Number(lessonRows[0]?.total || 0),
   });
+  revalidatePath(`/dashboard/pages/${pageId}/lessons`);
+}
+
+export async function updateLessonAction(formData: FormData) {
+  const { profile } = await requireCreator();
+  const pageId = String(formData.get("pageId") || "");
+  const lessonId = String(formData.get("lessonId") || "");
+  await requireOwnedPage(pageId, profile.id);
+  const videoUrl = cleanHttpUrl(String(formData.get("videoUrl") || ""));
+
+  await db
+    .update(courseLessons)
+    .set({
+      title: String(formData.get("title") || "").trim().slice(0, 180),
+      description: String(formData.get("description") || "").trim().slice(0, 1000),
+      content: String(formData.get("content") || "").trim().slice(0, 50000),
+      videoUrl: videoUrl || null,
+      videoProvider: videoUrl ? detectVideoProvider(videoUrl) : null,
+      resourceUrl: cleanHttpUrl(String(formData.get("resourceUrl") || "")) || null,
+      duration: String(formData.get("duration") || "").trim().slice(0, 30),
+      isPreview: formData.get("isPreview") === "on",
+      updatedAt: new Date(),
+    })
+    .where(and(eq(courseLessons.id, lessonId), eq(courseLessons.pageId, pageId)));
+
   revalidatePath(`/dashboard/pages/${pageId}/lessons`);
 }
 
@@ -462,6 +515,9 @@ export async function publishPageAction(formData: FormData) {
   const { profile } = await requireCreator();
   const pageId = String(formData.get("pageId") || "");
   const page = await requireOwnedPage(pageId, profile.id);
+  if (page.moderationStatus === "taken_down") {
+    redirect(`/dashboard/pages/${pageId}/preview?reason=moderated`);
+  }
   const subscription = await getCreatorSubscription(profile.id);
   const [readinessSections, readinessVideos] = await Promise.all([
     db.select().from(pageSections).where(eq(pageSections.pageId, pageId)),
