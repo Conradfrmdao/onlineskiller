@@ -64,7 +64,7 @@ export default function HomePage() {
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link href="/sign-up">Start building free <ArrowRight /></Link>
+                <Link href="/sign-up">Start building for free <ArrowRight /></Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link href="/templates">Explore templates</Link>

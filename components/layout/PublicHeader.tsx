@@ -28,7 +28,14 @@ export async function PublicHeader() {
             <Link href={userId ? "/dashboard" : "/sign-up"}>{userId ? "Dashboard" : "Start building"}</Link>
           </Button>
         </div>
-        <PublicMobileMenu signedIn={Boolean(userId)} />
+        <div className="flex items-center gap-1 md:hidden">
+          {!userId ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/sign-in">Sign in</Link>
+            </Button>
+          ) : null}
+          <PublicMobileMenu signedIn={Boolean(userId)} />
+        </div>
       </div>
     </header>
   );
