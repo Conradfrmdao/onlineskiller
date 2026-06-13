@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
 import { OnlineSkillerLogo } from "@/components/brand/OnlineSkillerLogo";
+import { PublicMobileMenu } from "@/components/layout/PublicMobileMenu";
 import { Button } from "@/components/ui/button";
 
 export async function PublicHeader() {
@@ -17,9 +18,9 @@ export async function PublicHeader() {
           <Link href="/templates" className="hover:text-slate-950">Templates</Link>
           <Link href="/pricing" className="hover:text-slate-950">Pricing</Link>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 md:flex">
           {!userId ? (
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Button asChild variant="ghost" size="sm">
               <Link href="/sign-in">Sign in</Link>
             </Button>
           ) : null}
@@ -27,6 +28,7 @@ export async function PublicHeader() {
             <Link href={userId ? "/dashboard" : "/sign-up"}>{userId ? "Dashboard" : "Start building"}</Link>
           </Button>
         </div>
+        <PublicMobileMenu signedIn={Boolean(userId)} />
       </div>
     </header>
   );

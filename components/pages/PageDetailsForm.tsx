@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadField } from "@/components/uploads/ImageUploadField";
 import type { CreatorPage, Template } from "@/db/schema";
+import { OFFER_CURRENCIES } from "@/lib/pages/pricing";
 import { PAGE_TYPES, PAGE_TYPE_LABELS } from "@/lib/pages/types";
 
 const initialState = { success: false, message: "" };
@@ -53,11 +54,20 @@ export function PageDetailsForm({ page, templates }: { page: CreatorPage; templa
             <Input id="category" name="category" defaultValue={page.category} placeholder="Career, design, business…" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="priceText">Price text</Label>
-            <Input id="priceText" name="priceText" defaultValue={page.priceText} placeholder="$49 or Book a call" />
+            <Label htmlFor="priceText">Offer price or label</Label>
+            <Input id="priceText" name="priceText" defaultValue={page.priceText} placeholder="49 or Book a call" />
             <p className="text-xs leading-5 text-slate-500">
-              Include a currency such as USD 49 or UGX 180,000. A bare number uses your profile country.
+              Enter an amount only, or a label such as Free or Book a call.
             </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="priceCurrency">Currency</Label>
+            <Select id="priceCurrency" name="priceCurrency" defaultValue={page.priceCurrency || "USD"}>
+              {OFFER_CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code}>{currency.label}</option>
+              ))}
+            </Select>
+            <p className="text-xs leading-5 text-slate-500">Used whenever the price is a number.</p>
           </div>
         </div>
       </section>

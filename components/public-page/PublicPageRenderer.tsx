@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { OnlineSkillerLogo } from "@/components/brand/OnlineSkillerLogo";
+import { PreviewSectionEditor } from "@/components/public-page/PreviewSectionEditor";
 import { TrackedCta, ViewTracker } from "@/components/public-page/ViewTracker";
 import type {
   CourseLesson,
@@ -211,7 +212,7 @@ export function PublicPageRenderer({
   const introEmbed = page.introVideoUrl
     ? getEmbedUrl(page.introVideoUrl, (page.introVideoProvider || undefined) as VideoProvider | undefined)
     : "";
-  const displayPrice = formatOfferPrice(page.priceText, creator.country);
+  const displayPrice = formatOfferPrice(page.priceText, page.priceCurrency);
   const headingClass = editorial
     ? "font-serif font-semibold tracking-[-0.035em]"
     : config.typography === "bold"
@@ -289,7 +290,7 @@ export function PublicPageRenderer({
       {!preview ? <ViewTracker pageId={page.id} /> : null}
       {preview ? (
         <div className="sticky top-0 z-50 bg-amber-300 px-4 py-2 text-center text-xs font-bold text-amber-950">
-          Private preview. Customers cannot see this page yet.
+          Private preview. Use Edit section on the page to update or delete content.
         </div>
       ) : null}
 
@@ -446,7 +447,7 @@ export function PublicPageRenderer({
           <section key={section.id} className="px-3 py-3 sm:px-6 sm:py-5 lg:px-8">
             <div
               className={cn(
-                "mx-auto max-w-6xl border px-5 py-10 sm:px-8 sm:py-14 lg:px-12",
+                "relative mx-auto max-w-6xl border px-5 py-14 sm:px-8 sm:py-16 lg:px-12",
                 frameClass,
               )}
               style={{
@@ -454,6 +455,7 @@ export function PublicPageRenderer({
                 borderColor: `${config.theme.text}10`,
               }}
             >
+              {preview ? <PreviewSectionEditor pageId={page.id} section={section} /> : null}
               <div className="flex items-center gap-3">
                 <span
                   className="grid size-10 place-items-center rounded-full"

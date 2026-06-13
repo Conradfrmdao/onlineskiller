@@ -63,7 +63,7 @@ export default async function PublicCheckoutPage({
   }
 
   const methods = data.paymentMethods.filter((method) => method.isEnabled);
-  const displayPrice = formatOfferPrice(data.page.priceText, data.creator.country);
+  const displayPrice = formatOfferPrice(data.page.priceText, data.page.priceCurrency);
 
   if (methods.length === 0) {
     return <CheckoutUnavailable />;

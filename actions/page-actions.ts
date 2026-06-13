@@ -136,6 +136,7 @@ export async function createPageAction(_state: ActionState, formData: FormData):
           description: `Explore ${parsed.data.title} from ${profile.businessName} and take the next clear step.`,
           category: parsed.data.category,
           priceText: parsed.data.priceText,
+          priceCurrency: parsed.data.priceCurrency,
           ctaText: cta.ctaText,
           ctaUrl: cta.ctaUrl,
           whatsappEnabled: cta.whatsappEnabled,
@@ -225,6 +226,7 @@ export async function updatePageAction(_state: ActionState, formData: FormData):
       pageType: parsed.data.pageType,
       category: parsed.data.category,
       priceText: parsed.data.priceText,
+      priceCurrency: parsed.data.priceCurrency,
       ctaText: parsed.data.ctaText,
       ctaUrl: cleanHttpUrl(parsed.data.ctaUrl) || null,
       heroImageUrl: cleanHttpUrl(parsed.data.heroImageUrl) || null,
@@ -297,7 +299,7 @@ export async function updateSectionAction(_state: ActionState, formData: FormDat
   const { profile } = await requireCreator();
   const pageId = String(formData.get("pageId") || "");
   const sectionId = String(formData.get("sectionId") || "");
-  await requireOwnedPage(pageId, profile.id);
+  const page = await requireOwnedPage(pageId, profile.id);
   const parsed = sectionSchema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {
@@ -317,6 +319,7 @@ export async function updateSectionAction(_state: ActionState, formData: FormDat
 
   revalidatePath(`/dashboard/pages/${pageId}/builder`);
   revalidatePath(`/dashboard/pages/${pageId}/preview`);
+  revalidatePath(`/p/${page.slug}`);
   return { success: true, message: "Section updated." };
 }
 
@@ -347,9 +350,11 @@ export async function deleteSectionAction(formData: FormData) {
   const { profile } = await requireCreator();
   const pageId = String(formData.get("pageId") || "");
   const sectionId = String(formData.get("sectionId") || "");
-  await requireOwnedPage(pageId, profile.id);
+  const page = await requireOwnedPage(pageId, profile.id);
   await db.delete(pageSections).where(and(eq(pageSections.id, sectionId), eq(pageSections.pageId, pageId)));
   revalidatePath(`/dashboard/pages/${pageId}/builder`);
+  revalidatePath(`/dashboard/pages/${pageId}/preview`);
+  revalidatePath(`/p/${page.slug}`);
 }
 
 export async function addVideoAction(_state: ActionState, formData: FormData): Promise<ActionState> {

@@ -26,10 +26,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadField } from "@/components/uploads/ImageUploadField";
 import type { CreatorProfile, Template } from "@/db/schema";
 import { LAUNCH_GOALS, type LaunchGoal } from "@/lib/pages/launch-flow";
+import { OFFER_CURRENCIES, type OfferCurrency } from "@/lib/pages/pricing";
 import { PAGE_TYPES, PAGE_TYPE_LABELS, type PageType } from "@/lib/pages/types";
 import { slugify } from "@/lib/utils/slugs";
 import { cn } from "@/lib/utils";
@@ -89,6 +91,7 @@ export function CreatePageForm({
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(profile.niche || "");
   const [priceText, setPriceText] = useState("");
+  const [priceCurrency, setPriceCurrency] = useState<OfferCurrency>("USD");
   const [logoUrl, setLogoUrl] = useState(profile.logoUrl || "");
   const [heroImageUrl, setHeroImageUrl] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
@@ -329,11 +332,25 @@ export function CreatePageForm({
               <Input id="category" name="category" value={category} onChange={(event) => setCategory(event.target.value)} placeholder="AI training" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="priceText">Price shown to customers</Label>
-              <Input id="priceText" name="priceText" value={priceText} onChange={(event) => setPriceText(event.target.value)} placeholder="$49, UGX 180,000, or Book a call" />
+              <Label htmlFor="priceText">Offer price or label</Label>
+              <Input id="priceText" name="priceText" value={priceText} onChange={(event) => setPriceText(event.target.value)} placeholder="49 or Book a call" />
               <p className="text-xs leading-5 text-slate-500">
-                Include the currency for the clearest checkout experience. A bare number uses your profile country.
+                Enter an amount only, or a label such as Free or Book a call.
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="priceCurrency">Currency</Label>
+              <Select
+                id="priceCurrency"
+                name="priceCurrency"
+                value={priceCurrency}
+                onChange={(event) => setPriceCurrency(event.target.value as OfferCurrency)}
+              >
+                {OFFER_CURRENCIES.map((currency) => (
+                  <option key={currency.code} value={currency.code}>{currency.label}</option>
+                ))}
+              </Select>
+              <p className="text-xs leading-5 text-slate-500">Used whenever the price is a number.</p>
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="slug">Public page address</Label>
@@ -482,7 +499,7 @@ export function CreatePageForm({
               ["Offer", title || "Not added"],
               ["Goal", selectedGoal.label],
               ["Public link", `/p/${slug || "your-page"}`],
-              ["Price", priceText || "Not shown yet"],
+              ["Price", priceText ? `${priceCurrency} ${priceText}` : "Not shown yet"],
               ["Cover photo", heroImageUrl ? "Added" : "Add after creating"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl bg-slate-50 p-4">

@@ -104,6 +104,7 @@ export const pages = pgTable(
     pageType: varchar("page_type", { length: 60 }).notNull(),
     category: varchar("category", { length: 100 }).notNull().default(""),
     priceText: varchar("price_text", { length: 100 }).notNull().default(""),
+    priceCurrency: varchar("price_currency", { length: 3 }).notNull().default("USD"),
     ctaText: varchar("cta_text", { length: 80 }).notNull().default("Get started"),
     ctaUrl: text("cta_url"),
     whatsappEnabled: boolean("whatsapp_enabled").notNull().default(true),

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { LAUNCH_GOALS } from "@/lib/pages/launch-flow";
+import { OFFER_CURRENCY_CODES } from "@/lib/pages/pricing";
 import { PAGE_TYPES, SECTION_TYPES } from "@/lib/pages/types";
 
 export const createPageSchema = z.object({
@@ -10,6 +11,7 @@ export const createPageSchema = z.object({
   description: z.string().trim().min(10, "Add a short description of your offer.").max(240),
   category: z.string().trim().min(2, "Add your category or niche.").max(100),
   priceText: z.string().trim().max(100),
+  priceCurrency: z.enum(OFFER_CURRENCY_CODES),
   launchGoal: z.enum(LAUNCH_GOALS.map((goal) => goal.value) as [
     (typeof LAUNCH_GOALS)[number]["value"],
     ...(typeof LAUNCH_GOALS)[number]["value"][],
@@ -29,6 +31,7 @@ export const updatePageSchema = z.object({
   pageType: z.enum(PAGE_TYPES),
   category: z.string().trim().max(100),
   priceText: z.string().trim().max(100),
+  priceCurrency: z.enum(OFFER_CURRENCY_CODES),
   ctaText: z.string().trim().min(2).max(80),
   ctaUrl: z.string().trim().max(1000),
   heroImageUrl: z.string().trim().max(1000),
