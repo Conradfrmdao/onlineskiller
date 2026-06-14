@@ -14,4 +14,8 @@ export const templateConfigSchema = z.object({
   sectionOrder: z.array(z.string()),
   cardStyle: z.enum(["soft", "outlined", "elevated"]),
   footerStyle: z.enum(["minimal", "full"]),
+  visualStyle: z.enum(["minimal", "gradient", "editorial", "technical", "playful", "luxury"]),
+  buttonStyle: z.enum(["pill", "rounded", "square"]),
+  sectionLayout: z.enum(["cards", "bands", "editorial"]),
+  heroMediaShape: z.enum(["portrait", "landscape", "browser", "poster"]),
 });

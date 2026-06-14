@@ -33,7 +33,7 @@ export function DashboardTopbar({
           <Button asChild size="sm" className="hidden min-[430px]:inline-flex">
             <Link href="/dashboard/pages/new"><Plus /> New page</Link>
           </Button>
-          <UserButton />
+          <UserButton userProfileMode="navigation" userProfileUrl="/dashboard/account" />
         </div>
       </div>
     </header>

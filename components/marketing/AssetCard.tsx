@@ -3,6 +3,7 @@ import { Download, LockKeyhole, Play, Star } from "lucide-react";
 
 import type { MarketingAsset } from "@/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { VideoPreview } from "@/components/marketing/VideoPreview";
 
 function isDirectVideo(asset: MarketingAsset) {
   return Boolean(
@@ -28,13 +29,7 @@ export function AssetCard({
       <Link href={`/dashboard/marketing/${asset.id}`} className="block">
         <div className="relative grid aspect-[9/12] place-items-center overflow-hidden bg-[#071426] text-white sm:aspect-[4/5]">
           {isDirectVideo(asset) ? (
-            <video
-              src={asset.videoUrl}
-              preload="metadata"
-              muted
-              playsInline
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-            />
+            <VideoPreview src={asset.videoUrl} title={asset.title} />
           ) : (
             <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#071426] via-[#102a56] to-blue-600">
               <Play className="size-9 transition group-hover:scale-110" />

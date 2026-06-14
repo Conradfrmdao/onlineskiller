@@ -65,4 +65,8 @@ export type TemplateConfig = {
   sectionOrder: string[];
   cardStyle: "soft" | "outlined" | "elevated";
   footerStyle: "minimal" | "full";
+  visualStyle: "minimal" | "gradient" | "editorial" | "technical" | "playful" | "luxury";
+  buttonStyle: "pill" | "rounded" | "square";
+  sectionLayout: "cards" | "bands" | "editorial";
+  heroMediaShape: "portrait" | "landscape" | "browser" | "poster";
 };

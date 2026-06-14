@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { BookOpenCheck, Clapperboard, Star } from "lucide-react";
 
 import {
@@ -21,7 +21,12 @@ export default async function MarketingHomePage() {
   const { profile } = await requireCreator();
   const [entitlements, assets, strategies, savedAssets, savedStrategies] = await Promise.all([
     getCreatorEntitlements(profile.id),
-    db.select().from(marketingAssets).where(eq(marketingAssets.isActive, true)).orderBy(asc(marketingAssets.title)).limit(4),
+    db
+      .select()
+      .from(marketingAssets)
+      .where(eq(marketingAssets.isActive, true))
+      .orderBy(desc(marketingAssets.createdAt), asc(marketingAssets.title))
+      .limit(4),
     db.select().from(marketingStrategies).where(eq(marketingStrategies.isActive, true)).orderBy(asc(marketingStrategies.title)).limit(4),
     db.select().from(savedMarketingAssets).where(eq(savedMarketingAssets.creatorId, profile.id)),
     db.select().from(savedMarketingStrategies).where(eq(savedMarketingStrategies.creatorId, profile.id)),

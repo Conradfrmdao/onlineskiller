@@ -47,6 +47,10 @@ const fallbackConfig: TemplateConfig = {
   sectionOrder: [],
   cardStyle: "soft",
   footerStyle: "full",
+  visualStyle: "minimal",
+  buttonStyle: "pill",
+  sectionLayout: "cards",
+  heroMediaShape: "landscape",
 };
 
 type PublicPageData = {
@@ -195,10 +199,25 @@ export function PublicPageRenderer({
   const { page, creator, template, sections, videos, modules, lessons, paymentMethods } = data;
   const config = template?.config || fallbackConfig;
   const templateSlug = template?.slug || "default";
-  const sharp = templateSlug === "bold-seller" || templateSlug === "tech-mentor";
+  const sharp =
+    config.buttonStyle === "square" ||
+    templateSlug === "bold-seller" ||
+    templateSlug === "tech-mentor";
   const editorial = config.typography === "editorial";
   const technical = templateSlug === "tech-mentor" || templateSlug === "digital-hustle";
-  const frameClass = sharp ? "rounded-lg" : editorial ? "rounded-[2rem]" : "rounded-2xl";
+  const visualStyle = config.visualStyle || (technical ? "technical" : editorial ? "editorial" : "minimal");
+  const buttonClass =
+    config.buttonStyle === "square"
+      ? "rounded-md"
+      : config.buttonStyle === "rounded"
+        ? "rounded-xl"
+        : "rounded-full";
+  const frameClass =
+    config.buttonStyle === "square"
+      ? "rounded-lg"
+      : editorial || visualStyle === "luxury"
+        ? "rounded-[2rem]"
+        : "rounded-2xl";
   const checkoutUrl = hasEnabledPaymentMethods(paymentMethods)
     ? `/p/${page.slug}/checkout${preview ? "?preview=1" : ""}`
     : "";
@@ -229,9 +248,24 @@ export function PublicPageRenderer({
       : config.typography === "classic"
         ? "font-serif font-bold tracking-[-0.025em]"
         : "font-bold tracking-[-0.04em]";
-  const pageBackground = technical
-    ? `radial-gradient(circle at 85% 10%, ${config.theme.accent}20, transparent 28%), linear-gradient(${config.theme.text}08 1px, transparent 1px), linear-gradient(90deg, ${config.theme.text}08 1px, transparent 1px), ${config.theme.background}`
-    : `radial-gradient(circle at 90% 5%, ${config.theme.accent}1c, transparent 30%), ${config.theme.background}`;
+  const pageBackground =
+    visualStyle === "technical"
+      ? `radial-gradient(circle at 85% 10%, ${config.theme.accent}20, transparent 28%), linear-gradient(${config.theme.text}08 1px, transparent 1px), linear-gradient(90deg, ${config.theme.text}08 1px, transparent 1px), ${config.theme.background}`
+      : visualStyle === "gradient"
+        ? `radial-gradient(circle at 10% 5%, ${config.theme.accent}35, transparent 28%), radial-gradient(circle at 92% 18%, ${config.theme.accent}20, transparent 34%), linear-gradient(145deg, ${config.theme.background}, ${config.theme.surface})`
+        : visualStyle === "playful"
+          ? `radial-gradient(circle at 12% 8%, ${config.theme.accent}30 0 7%, transparent 7.5%), radial-gradient(circle at 88% 18%, ${config.theme.accent}1f 0 10%, transparent 10.5%), ${config.theme.background}`
+          : visualStyle === "luxury"
+            ? `linear-gradient(125deg, ${config.theme.accent}12 1px, transparent 1px), radial-gradient(circle at 88% 4%, ${config.theme.accent}20, transparent 28%), ${config.theme.background}`
+            : `radial-gradient(circle at 90% 5%, ${config.theme.accent}1c, transparent 30%), ${config.theme.background}`;
+  const heroMediaAspect =
+    config.heroMediaShape === "portrait"
+      ? "aspect-[4/5]"
+      : config.heroMediaShape === "poster"
+        ? "aspect-[3/4]"
+        : config.heroMediaShape === "browser"
+          ? "aspect-[16/11]"
+          : "aspect-[5/4] sm:aspect-[4/3]";
 
   const heroMedia = (
     <div
@@ -247,20 +281,21 @@ export function PublicPageRenderer({
         <img
           src={page.heroImageUrl}
           alt={`${page.title} cover`}
-          className={cn("aspect-[5/4] w-full object-cover sm:aspect-[4/3]", sharp ? "rounded-md" : "rounded-[1.45rem]")}
+          className={cn("w-full object-cover", heroMediaAspect, frameClass)}
         />
       ) : introEmbed ? (
         <iframe
           src={introEmbed}
           title={page.title}
-          className={cn("aspect-video w-full", sharp ? "rounded-md" : "rounded-[1.45rem]")}
+          className={cn("aspect-video w-full", frameClass)}
           allowFullScreen
         />
       ) : (
         <div
           className={cn(
-            "relative grid aspect-[5/4] place-items-center overflow-hidden p-8 text-center sm:aspect-[4/3]",
-            sharp ? "rounded-md" : "rounded-[1.45rem]",
+            "relative grid place-items-center overflow-hidden p-8 text-center",
+            heroMediaAspect,
+            frameClass,
           )}
           style={{
             background: `radial-gradient(circle at 70% 20%, ${config.theme.accent}45, transparent 35%), linear-gradient(145deg, ${config.theme.accent}16, ${config.theme.background})`,
@@ -291,7 +326,7 @@ export function PublicPageRenderer({
     <main
       style={{
         background: pageBackground,
-        backgroundSize: technical ? "auto, 32px 32px, 32px 32px, auto" : undefined,
+        backgroundSize: visualStyle === "technical" ? "auto, 32px 32px, 32px 32px, auto" : undefined,
         color: config.theme.text,
       }}
       className="min-h-screen pb-24 md:pb-0"
@@ -307,7 +342,7 @@ export function PublicPageRenderer({
         <div
           className={cn(
             "mx-auto flex max-w-6xl items-center justify-between gap-3 border px-3 py-2.5 sm:px-5 sm:py-3",
-            sharp ? "rounded-lg" : "rounded-2xl sm:rounded-full",
+            config.buttonStyle === "square" ? "rounded-lg" : "rounded-2xl sm:rounded-full",
           )}
           style={{
             background: `${config.theme.surface}e8`,
@@ -340,7 +375,7 @@ export function PublicPageRenderer({
               newTab={Boolean(directCtaUrl && !checkoutUrl)}
               className={cn(
                 "hidden items-center gap-2 px-4 py-2 text-sm font-bold transition hover:-translate-y-0.5 sm:inline-flex",
-                sharp ? "rounded-md" : "rounded-full",
+                buttonClass,
               )}
               style={{ background: config.theme.accent, color: config.theme.background }}
             >
@@ -354,15 +389,15 @@ export function PublicPageRenderer({
         className={cn(
           "mx-auto grid max-w-6xl items-center gap-8 px-4 pb-14 pt-12 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8",
           config.heroLayout === "split" && "lg:grid-cols-[1.03fr_.97fr] lg:gap-14",
-          config.heroLayout !== "split" && "text-center",
+          config.heroLayout === "centered" && "text-center",
         )}
       >
-        <div className={cn(config.heroLayout !== "split" && "mx-auto max-w-4xl")}>
-          <div className={cn("flex flex-wrap gap-2", config.heroLayout !== "split" && "justify-center")}>
+        <div className={cn(config.heroLayout === "centered" && "mx-auto max-w-4xl", config.heroLayout === "stacked" && "max-w-5xl")}>
+          <div className={cn("flex flex-wrap gap-2", config.heroLayout === "centered" && "justify-center")}>
             <span
               className={cn(
                 "inline-flex items-center rounded-full border px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em]",
-                sharp && "rounded-md",
+                config.buttonStyle === "square" && "rounded-md",
               )}
               style={{
                 color: config.theme.accent,
@@ -376,7 +411,7 @@ export function PublicPageRenderer({
               <span
                 className={cn(
                   "inline-flex items-center rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold",
-                  sharp && "rounded-md",
+                  config.buttonStyle === "square" && "rounded-md",
                 )}
                 style={{ borderColor: `${config.theme.text}12`, color: config.theme.muted }}
               >
@@ -394,7 +429,7 @@ export function PublicPageRenderer({
             <p
               className={cn(
                 "mt-4 max-w-2xl text-sm leading-7 sm:text-base",
-                config.heroLayout !== "split" && "mx-auto",
+                config.heroLayout === "centered" && "mx-auto",
               )}
               style={{ color: config.theme.muted }}
             >
@@ -403,13 +438,13 @@ export function PublicPageRenderer({
           ) : null}
 
           {config.heroLayout !== "split" && (page.heroImageUrl || introEmbed) ? (
-            <div className="mx-auto mt-8 max-w-3xl">{heroMedia}</div>
+            <div className={cn("mt-8", config.heroLayout === "centered" ? "mx-auto max-w-3xl" : "max-w-5xl")}>{heroMedia}</div>
           ) : null}
 
           <div
             className={cn(
               "mt-8 flex flex-col gap-3 sm:flex-row sm:items-center",
-              config.heroLayout !== "split" && "sm:justify-center",
+              config.heroLayout === "centered" && "sm:justify-center",
             )}
           >
             {directCtaUrl ? (
@@ -419,7 +454,7 @@ export function PublicPageRenderer({
                 newTab={!checkoutUrl}
                 className={cn(
                   "inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-bold transition hover:-translate-y-0.5",
-                  sharp ? "rounded-md" : "rounded-full",
+                  buttonClass,
                 )}
                 style={{
                   background: config.theme.accent,
@@ -435,7 +470,7 @@ export function PublicPageRenderer({
               href={requestAccessUrl}
               className={cn(
                 "inline-flex min-h-12 items-center justify-center gap-2 border px-6 py-3 text-sm font-bold transition hover:-translate-y-0.5",
-                sharp ? "rounded-md" : "rounded-full",
+                buttonClass,
               )}
               style={{
                 borderColor: `${config.theme.accent}55`,
@@ -449,7 +484,7 @@ export function PublicPageRenderer({
               <div
                 className={cn(
                   "flex min-h-12 items-center justify-between gap-4 border px-4 py-2 text-left sm:min-w-40",
-                  sharp ? "rounded-md" : "rounded-2xl",
+                  config.buttonStyle === "square" ? "rounded-md" : "rounded-2xl",
                 )}
                 style={{ borderColor: `${config.theme.text}14`, background: `${config.theme.surface}cc` }}
               >
@@ -480,6 +515,12 @@ export function PublicPageRenderer({
               style={{
                 background: index % 2 === 0 ? `${config.theme.surface}d8` : `${config.theme.surface}78`,
                 borderColor: `${config.theme.text}10`,
+                boxShadow:
+                  config.sectionLayout === "editorial"
+                    ? `inset 4px 0 0 ${config.theme.accent}`
+                    : config.sectionLayout === "cards"
+                      ? "0 32px 90px -72px rgba(0,0,0,.65)"
+                      : undefined,
               }}
             >
               {preview ? <PreviewSectionEditor pageId={page.id} section={section} /> : null}
@@ -601,7 +642,7 @@ export function PublicPageRenderer({
               newTab={!checkoutUrl}
               className={cn(
                 "mt-8 inline-flex items-center gap-2 px-7 py-3.5 font-bold",
-                sharp ? "rounded-md" : "rounded-full",
+                buttonClass,
               )}
               style={{ background: config.theme.accent, color: config.theme.background }}
             >

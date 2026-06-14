@@ -41,7 +41,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">OnlineSkiller</p><p className="text-sm font-semibold">Administration</p></div>
-          <UserButton />
+          <UserButton userProfileMode="navigation" userProfileUrl="/dashboard/account" />
         </div>
         <nav className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
           {items.map(([label, href, Icon]) => (

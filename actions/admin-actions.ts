@@ -78,6 +78,10 @@ function templateConfig(accent: string): TemplateConfig {
     sectionOrder: ["benefits", "who-it-is-for", "what-you-get", "pricing", "testimonials", "faq"],
     cardStyle: "outlined",
     footerStyle: "full",
+    visualStyle: "minimal",
+    buttonStyle: "rounded",
+    sectionLayout: "cards",
+    heroMediaShape: "landscape",
   };
 }
 

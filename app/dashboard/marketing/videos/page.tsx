@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, asc, count, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, or } from "drizzle-orm";
 
 import { marketingAssets, savedMarketingAssets } from "@/db/schema";
 import { AssetCard } from "@/components/marketing/AssetCard";
@@ -21,28 +21,33 @@ export default async function MarketingVideosPage({
   const query = typeof params.q === "string" ? params.q : "";
   const category = typeof params.category === "string" ? params.category : "";
   const requestedPage = typeof params.page === "string" ? Number(params.page) : 1;
-  const currentPage = Number.isFinite(requestedPage) ? Math.max(1, Math.floor(requestedPage)) : 1;
+  const initialPage = Number.isFinite(requestedPage) ? Math.max(1, Math.floor(requestedPage)) : 1;
   const pageSize = 24;
   const conditions = [eq(marketingAssets.isActive, true)];
   if (query) conditions.push(or(ilike(marketingAssets.title, `%${query}%`), ilike(marketingAssets.niche, `%${query}%`))!);
   if (category) conditions.push(eq(marketingAssets.category, category));
 
-  const [assets, totalRows, entitlements, savedRows, categoryRows] = await Promise.all([
-    db
-      .select()
-      .from(marketingAssets)
-      .where(and(...conditions))
-      .orderBy(asc(marketingAssets.title))
-      .limit(pageSize)
-      .offset((currentPage - 1) * pageSize),
+  const [totalRows, entitlements, savedRows, categoryRows] = await Promise.all([
     db.select({ total: count() }).from(marketingAssets).where(and(...conditions)),
     getCreatorEntitlements(profile.id),
     db.select().from(savedMarketingAssets).where(eq(savedMarketingAssets.creatorId, profile.id)),
-    db.selectDistinct({ value: marketingAssets.category }).from(marketingAssets).orderBy(asc(marketingAssets.category)),
+    db
+      .selectDistinct({ value: marketingAssets.category })
+      .from(marketingAssets)
+      .where(eq(marketingAssets.isActive, true))
+      .orderBy(asc(marketingAssets.category)),
   ]);
-  const savedIds = new Set(savedRows.map((row) => row.assetId));
   const total = Number(totalRows[0]?.total || 0);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(initialPage, totalPages);
+  const assets = await db
+    .select()
+    .from(marketingAssets)
+    .where(and(...conditions))
+    .orderBy(desc(marketingAssets.createdAt), asc(marketingAssets.title))
+    .limit(pageSize)
+    .offset((currentPage - 1) * pageSize);
+  const savedIds = new Set(savedRows.map((row) => row.assetId));
   const pageHref = (page: number) => {
     const next = new URLSearchParams();
     if (query) next.set("q", query);
@@ -72,6 +77,15 @@ export default async function MarketingVideosPage({
           />
         ))}
       </div>
+      {!assets.length ? (
+        <div className="panel rounded-2xl p-10 text-center">
+          <h2 className="font-semibold text-slate-950">No clips match this filter</h2>
+          <p className="mt-2 text-sm text-slate-600">Clear the search or choose another collection.</p>
+          <Button asChild variant="outline" className="mt-5">
+            <Link href="/dashboard/marketing/videos">Show every video</Link>
+          </Button>
+        </div>
+      ) : null}
       {totalPages > 1 ? (
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4">
           <Button asChild variant="outline" disabled={currentPage <= 1}>

@@ -27,8 +27,9 @@ export function TemplatePreview({
 }) {
   const config = template.config;
   const outlined = config.cardStyle === "outlined";
-  const sharp = template.slug === "bold-seller" || template.slug === "tech-mentor";
-  const image = previewImages[template.slug] || "/landing/offer-builder.jpg";
+  const sharp = config.buttonStyle === "square";
+  const image = previewImages[template.slug];
+  const motif = template.slug.split("").reduce((total, character) => total + character.charCodeAt(0), 0) % 3;
 
   return (
     <article className="group overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white shadow-[0_24px_70px_-55px_rgba(7,20,38,.45)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_30px_80px_-48px_rgba(23,105,255,.36)]">
@@ -95,11 +96,60 @@ export function TemplatePreview({
               <div
                 className={cn(
                   "relative min-h-0 overflow-hidden",
-                  config.heroLayout === "stacked" ? "h-full" : "aspect-[4/5]",
+                  config.heroLayout === "stacked"
+                    ? "h-full"
+                    : config.heroMediaShape === "browser"
+                      ? "aspect-[16/12]"
+                      : config.heroMediaShape === "poster"
+                        ? "aspect-[3/4]"
+                        : "aspect-[4/5]",
                   sharp ? "rounded-sm" : "rounded-lg",
                 )}
+                style={{
+                  background: `linear-gradient(145deg, ${config.theme.accent}24, ${config.theme.background})`,
+                }}
               >
-                <Image src={image} alt="" fill sizes="360px" className="object-cover" />
+                {image ? (
+                  <Image src={image} alt="" fill sizes="360px" className="object-cover" />
+                ) : (
+                  <div className="absolute inset-0 overflow-hidden p-2.5">
+                    <span
+                      className={cn(
+                        "absolute opacity-50",
+                        motif === 0 && "-right-5 -top-5 size-24 rounded-full",
+                        motif === 1 && "bottom-2 right-2 h-4/5 w-2/3 rotate-6 rounded-xl",
+                        motif === 2 && "inset-x-3 top-4 h-2/5 rounded-[50%]",
+                      )}
+                      style={{
+                        background: `linear-gradient(145deg, ${config.theme.accent}, ${config.theme.surface})`,
+                      }}
+                    />
+                    <div
+                      className={cn(
+                        "absolute inset-x-3 bottom-3 border p-2 shadow-xl",
+                        sharp ? "rounded-sm" : "rounded-md",
+                      )}
+                      style={{
+                        background: `${config.theme.surface}ee`,
+                        borderColor: `${config.theme.text}14`,
+                      }}
+                    >
+                      <p className="text-[0.35rem] font-bold uppercase tracking-[0.16em]" style={{ color: config.theme.accent }}>
+                        {template.pageType.replaceAll("-", " ")}
+                      </p>
+                      <p className="mt-1 text-[0.56rem] font-black leading-tight">{template.name}</p>
+                      <div className="mt-2 grid grid-cols-3 gap-1">
+                        {[0, 1, 2].map((item) => (
+                          <span
+                            key={item}
+                            className="h-5 rounded-sm"
+                            style={{ background: item === motif ? `${config.theme.accent}45` : `${config.theme.text}0c` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div
                   className="absolute inset-0"
                   style={{ boxShadow: `inset 0 0 0 1px ${config.theme.text}12` }}

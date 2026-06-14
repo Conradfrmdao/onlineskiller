@@ -16,7 +16,7 @@ export default function TemplatesPage() {
       <section className="px-4 pb-20 pt-32 sm:px-6 sm:pt-40 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <Badge>Ten original launch styles</Badge>
+            <Badge>Thirty original launch styles</Badge>
             <h1 className="mt-5 text-4xl font-black tracking-[-0.045em] sm:text-6xl">A strong first impression, already handled.</h1>
             <p className="mt-5 text-base leading-7 text-slate-600">
               Every template adapts to your content and brand color while preserving a deliberate, responsive layout.
