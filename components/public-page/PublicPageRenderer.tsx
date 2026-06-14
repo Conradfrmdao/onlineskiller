@@ -208,9 +208,15 @@ export function PublicPageRenderer({
     (page.whatsappEnabled
       ? whatsappUrl(creator.whatsappNumber, `Hi ${creator.displayName}, I am interested in ${page.title}.`)
       : "");
-  const ctaUrl = directCtaUrl
-    ? `/p/${page.slug}/request${preview ? "?preview=1" : ""}`
-    : "";
+  const requestAccessUrl = `/p/${page.slug}/request${preview ? "?preview=1" : ""}`;
+  const ctaUrl = directCtaUrl || requestAccessUrl;
+  const primaryCtaLabel = checkoutUrl
+    ? "Pay now"
+    : page.ctaUrl
+      ? page.ctaText
+      : directCtaUrl
+        ? "Message creator"
+        : "Request access";
   const visibleSections = sections.filter((section) => section.isVisible);
   const introEmbed = page.introVideoUrl
     ? getEmbedUrl(page.introVideoUrl, (page.introVideoProvider || undefined) as VideoProvider | undefined)
@@ -331,14 +337,14 @@ export function PublicPageRenderer({
             <TrackedCta
               pageId={page.id}
               href={ctaUrl}
-              newTab={!checkoutUrl}
+              newTab={Boolean(directCtaUrl && !checkoutUrl)}
               className={cn(
                 "hidden items-center gap-2 px-4 py-2 text-sm font-bold transition hover:-translate-y-0.5 sm:inline-flex",
                 sharp ? "rounded-md" : "rounded-full",
               )}
               style={{ background: config.theme.accent, color: config.theme.background }}
             >
-              {page.ctaText} <ArrowRight className="size-4" />
+              {primaryCtaLabel} <ArrowRight className="size-4" />
             </TrackedCta>
           ) : null}
         </div>
@@ -406,10 +412,10 @@ export function PublicPageRenderer({
               config.heroLayout !== "split" && "sm:justify-center",
             )}
           >
-            {ctaUrl ? (
+            {directCtaUrl ? (
               <TrackedCta
                 pageId={page.id}
-                href={ctaUrl}
+                href={directCtaUrl}
                 newTab={!checkoutUrl}
                 className={cn(
                   "inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-bold transition hover:-translate-y-0.5",
@@ -421,9 +427,24 @@ export function PublicPageRenderer({
                   boxShadow: `0 18px 45px -24px ${config.theme.accent}`,
                 }}
               >
-                {page.ctaText} <ArrowRight className="size-4" />
+                {primaryCtaLabel} <ArrowRight className="size-4" />
               </TrackedCta>
             ) : null}
+            <TrackedCta
+              pageId={page.id}
+              href={requestAccessUrl}
+              className={cn(
+                "inline-flex min-h-12 items-center justify-center gap-2 border px-6 py-3 text-sm font-bold transition hover:-translate-y-0.5",
+                sharp ? "rounded-md" : "rounded-full",
+              )}
+              style={{
+                borderColor: `${config.theme.accent}55`,
+                color: config.theme.text,
+                background: config.theme.surface,
+              }}
+            >
+              I have paid - request access
+            </TrackedCta>
             {displayPrice ? (
               <div
                 className={cn(
@@ -439,6 +460,9 @@ export function PublicPageRenderer({
               </div>
             ) : null}
           </div>
+          <p className="mt-3 text-xs" style={{ color: config.theme.muted }}>
+            After payment, submit your transaction ID or proof so the creator can approve access.
+          </p>
         </div>
 
         {config.heroLayout === "split" ? heroMedia : null}
@@ -570,10 +594,10 @@ export function PublicPageRenderer({
           <p className="mx-auto mt-4 max-w-xl text-base leading-7" style={{ color: config.theme.muted }}>
             Connect directly with {creator.displayName} and find out whether {page.title} is right for you.
           </p>
-          {ctaUrl ? (
+          {directCtaUrl ? (
             <TrackedCta
               pageId={page.id}
-              href={ctaUrl}
+              href={directCtaUrl}
               newTab={!checkoutUrl}
               className={cn(
                 "mt-8 inline-flex items-center gap-2 px-7 py-3.5 font-bold",
@@ -581,9 +605,19 @@ export function PublicPageRenderer({
               )}
               style={{ background: config.theme.accent, color: config.theme.background }}
             >
-              {page.ctaText} <ArrowRight />
+              {primaryCtaLabel} <ArrowRight />
             </TrackedCta>
           ) : null}
+          <div className="mt-3">
+            <TrackedCta
+              pageId={page.id}
+              href={requestAccessUrl}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold underline underline-offset-4"
+              style={{ color: config.theme.text }}
+            >
+              Already paid? Request access
+            </TrackedCta>
+          </div>
         </div>
       </section>
 
@@ -632,7 +666,7 @@ export function PublicPageRenderer({
             }}
           >
             <span>
-              <span className="block text-sm">{page.ctaText}</span>
+              <span className="block text-sm">{primaryCtaLabel}</span>
               {displayPrice ? <span className="block text-[0.68rem] font-semibold opacity-75">{displayPrice}</span> : null}
             </span>
             <ArrowRight />

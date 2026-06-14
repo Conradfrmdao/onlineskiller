@@ -69,7 +69,7 @@ export default async function AdminHomePage() {
     ["Live pages", livePageRows[0]?.total || 0, "/admin/pages", Files],
     ["Active subscriptions", subscriptionRows[0]?.total || 0, "/admin/subscriptions", CreditCard],
     ["Completed payments", paymentRows[0]?.total || 0, "/admin/payments", ReceiptText],
-    ["Customer requests", requestRows[0]?.total || 0, "/admin/pages", MessageSquareText],
+    ["Customer requests", requestRows[0]?.total || 0, "/admin/access-requests", MessageSquareText],
     ["Open support", supportRows[0]?.total || 0, "/admin/support", LifeBuoy],
   ] as const;
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, CreditCard, Files, LayoutDashboard, Megaphone } from "lucide-react";
+import { CreditCard, Files, LayoutDashboard, LayoutTemplate, Megaphone } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ const items = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { label: "Pages", href: "/dashboard/pages", icon: Files },
   { label: "Market", href: "/dashboard/marketing", icon: Megaphone },
-  { label: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
+  { label: "Templates", href: "/dashboard/templates", icon: LayoutTemplate },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
 ];
 

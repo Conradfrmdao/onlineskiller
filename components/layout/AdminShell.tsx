@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { CreditCard, Files, LayoutDashboard, LayoutTemplate, LifeBuoy, Megaphone, ReceiptText, Settings, Users } from "lucide-react";
+import { CreditCard, Files, LayoutDashboard, LayoutTemplate, LifeBuoy, Megaphone, ReceiptText, Settings, UserRoundCheck, Users } from "lucide-react";
 
 import { OnlineSkillerLogo } from "@/components/brand/OnlineSkillerLogo";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const items = [
   ["Overview", "/admin", LayoutDashboard],
   ["Users", "/admin/users", Users],
   ["Pages", "/admin/pages", Files],
+  ["Access", "/admin/access-requests", UserRoundCheck],
   ["Templates", "/admin/templates", LayoutTemplate],
   ["Assets", "/admin/marketing-assets", Megaphone],
   ["Strategies", "/admin/marketing-strategies", Megaphone],

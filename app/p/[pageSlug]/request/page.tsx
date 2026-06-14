@@ -29,7 +29,13 @@ export default async function CustomerRequestPage({
   searchParams,
 }: {
   params: Promise<{ pageSlug: string }>;
-  searchParams: Promise<{ submitted?: string; error?: string; preview?: string; reference?: string }>;
+  searchParams: Promise<{
+    submitted?: string;
+    error?: string;
+    preview?: string;
+    reference?: string;
+    notice?: string;
+  }>;
 }) {
   const [{ pageSlug }, query] = await Promise.all([params, searchParams]);
   const data = await getPublicPageBySlug(pageSlug);
@@ -159,7 +165,27 @@ export default async function CustomerRequestPage({
               </div>
               {query.error === "contact" ? (
                 <Alert variant="destructive" className="mt-5">
-                  Add your name and at least an email address or phone number.
+                  Add your name, email address, and payment method.
+                </Alert>
+              ) : null}
+              {query.error === "proof" ? (
+                <Alert variant="destructive" className="mt-5">
+                  Add either a transaction ID or a link to your payment screenshot.
+                </Alert>
+              ) : null}
+              {query.notice === "sent" ? (
+                <Alert variant="success" className="mt-5">
+                  Your access request has been sent. The creator will review your payment before approving access.
+                </Alert>
+              ) : null}
+              {query.notice === "pending" ? (
+                <Alert variant="warning" className="mt-5">
+                  You already have a pending request for this product. The creator will review it soon.
+                </Alert>
+              ) : null}
+              {query.notice === "active" ? (
+                <Alert variant="success" className="mt-5">
+                  You already have approved access. Check your email or contact the creator for your link.
                 </Alert>
               ) : null}
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -169,7 +195,7 @@ export default async function CustomerRequestPage({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="customerEmail">Email</Label>
-                  <Input id="customerEmail" name="customerEmail" type="email" />
+                  <Input id="customerEmail" name="customerEmail" type="email" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="customerPhone">Phone or WhatsApp</Label>
@@ -177,13 +203,30 @@ export default async function CustomerRequestPage({
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="paymentMethod">Preferred payment method</Label>
-                  <Select id="paymentMethod" name="paymentMethod" defaultValue="">
-                    <option value="">Not sure yet</option>
+                  <Select id="paymentMethod" name="paymentMethod" defaultValue="" required>
+                    <option value="" disabled>Choose payment method</option>
                     {paymentMethods.map((method) => (
                       <option key={method.id} value={method.methodType}>{method.label}</option>
                     ))}
                     <option value="contact">Discuss with creator</option>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="paymentReference">Transaction ID or reference</Label>
+                  <Input
+                    id="paymentReference"
+                    name="paymentReference"
+                    placeholder="Example: MTN12345678"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="paymentProofUrl">Payment screenshot link</Label>
+                  <Input
+                    id="paymentProofUrl"
+                    name="paymentProofUrl"
+                    type="url"
+                    placeholder="Google Drive or image URL"
+                  />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="message">Question or delivery note</Label>
@@ -195,7 +238,7 @@ export default async function CustomerRequestPage({
                 </div>
               </div>
               <Button type="submit" size="lg" className="mt-6 w-full">
-                Send request and continue
+                Submit payment proof
               </Button>
             </form>
           )}

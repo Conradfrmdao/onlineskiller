@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { and, eq } from "drizzle-orm";
-import { ExternalLink, LockKeyhole, Star } from "lucide-react";
+import { Download, ExternalLink, LockKeyhole, Star } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import {
@@ -39,6 +39,11 @@ export default async function MarketingAssetPage({ params }: { params: Promise<{
   const data = rows[0];
   if (!data) notFound();
   const locked = data.asset.isPremium && (!entitlements.active || !entitlements.plan.premiumMarketing);
+  const directVideo = Boolean(
+    data.asset.downloadUrl ||
+      data.asset.videoUrl.includes(".blob.vercel-storage.com") ||
+      /\.mp4(?:$|\?)/i.test(data.asset.videoUrl),
+  );
 
   return (
     <div className="space-y-8">
@@ -56,16 +61,24 @@ export default async function MarketingAssetPage({ params }: { params: Promise<{
         }
       />
       <section className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
-        <div className="relative grid min-h-80 place-items-center rounded-2xl bg-gradient-to-br from-[#071426] via-[#102a56] to-blue-600 p-8 text-center text-white">
+        <div className="relative grid min-h-80 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#071426] via-[#102a56] to-blue-600 text-center text-white">
           {locked ? (
-            <div>
+            <div className="p-8">
               <LockKeyhole className="mx-auto size-10 text-amber-300" />
               <h2 className="mt-4 text-xl font-semibold">Premium marketing resource</h2>
               <p className="mt-2 text-sm text-slate-300">Activate Growth or Pro to unlock the full script and campaign use.</p>
               <Button asChild variant="gold" className="mt-5"><Link href="/dashboard/billing">View plans</Link></Button>
             </div>
+          ) : directVideo ? (
+            <video
+              src={data.asset.videoUrl}
+              controls
+              playsInline
+              preload="metadata"
+              className="max-h-[44rem] w-full bg-black object-contain"
+            />
           ) : (
-            <div>
+            <div className="p-8">
               <Badge className="border-white/15 bg-white/10 text-white">Licensed source reference</Badge>
               <h2 className="mt-5 text-2xl font-bold">{data.asset.title}</h2>
               <Button asChild variant="gold" className="mt-6">
@@ -81,6 +94,13 @@ export default async function MarketingAssetPage({ params }: { params: Promise<{
             <div><p className="text-xs text-slate-500">License record</p><p className="mt-1 text-sm leading-6">{data.asset.licenseType}</p></div>
             <div className="flex flex-wrap gap-2">{data.asset.tags.map((tag) => <Badge key={tag} variant="secondary">{tag}</Badge>)}</div>
             <Alert variant="warning">Always confirm the current source license and releases before using stock content in a paid campaign.</Alert>
+            {!locked ? (
+              <Button asChild className="w-full">
+                <a href={data.asset.downloadUrl || data.asset.videoUrl}>
+                  <Download /> Download video
+                </a>
+              </Button>
+            ) : null}
           </CardContent>
         </Card>
       </section>

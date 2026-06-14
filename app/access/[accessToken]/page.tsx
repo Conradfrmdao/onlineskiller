@@ -11,7 +11,10 @@ import {
   courseModules,
   creatorProfiles,
   customerRequests,
+  pageSections,
+  pageVideos,
   pages,
+  subscriptions,
   users,
 } from "@/db/schema";
 import { db } from "@/lib/db";
@@ -46,11 +49,14 @@ export default async function CustomerAccessPage({
       page: pages,
       creator: creatorProfiles,
       userStatus: users.status,
+      subscriptionStatus: subscriptions.status,
+      subscriptionPeriodEnd: subscriptions.currentPeriodEnd,
     })
     .from(customerRequests)
     .innerJoin(pages, eq(pages.id, customerRequests.pageId))
     .innerJoin(creatorProfiles, eq(creatorProfiles.id, customerRequests.creatorId))
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .leftJoin(subscriptions, eq(subscriptions.creatorId, creatorProfiles.id))
     .where(eq(customerRequests.accessToken, accessToken))
     .limit(1);
   const data = rows[0];
@@ -58,14 +64,19 @@ export default async function CustomerAccessPage({
   if (!data) notFound();
   const active = hasActiveCustomerAccess({
     accessStatus: data.request.accessStatus,
+    requestStatus: data.request.requestStatus,
     accessExpiresAt: data.request.accessExpiresAt,
     userStatus: data.userStatus,
     moderationStatus: data.page.moderationStatus,
+    pageStatus: data.page.status,
+    pageIsLive: data.page.isLive,
+    subscriptionStatus: data.subscriptionStatus,
+    subscriptionPeriodEnd: data.subscriptionPeriodEnd,
   });
 
   if (!active) return <AccessUnavailable />;
 
-  const [modules, lessons] = await Promise.all([
+  const [modules, lessons, videos, sections] = await Promise.all([
     db
       .select()
       .from(courseModules)
@@ -76,6 +87,16 @@ export default async function CustomerAccessPage({
       .from(courseLessons)
       .where(eq(courseLessons.pageId, data.page.id))
       .orderBy(courseLessons.sortOrder),
+    db
+      .select()
+      .from(pageVideos)
+      .where(eq(pageVideos.pageId, data.page.id))
+      .orderBy(pageVideos.sortOrder),
+    db
+      .select()
+      .from(pageSections)
+      .where(eq(pageSections.pageId, data.page.id))
+      .orderBy(pageSections.sortOrder),
   ]);
 
   return (
@@ -165,6 +186,47 @@ export default async function CustomerAccessPage({
                 </article>
               ))}
             </div>
+          </section>
+        ) : null}
+
+        {data.page.pageType !== "online-course" && (videos.length || sections.length) ? (
+          <section className="mt-10 space-y-6">
+            <div className="flex items-center gap-3">
+              <BookOpen className="size-6 text-blue-700" />
+              <h2 className="text-2xl font-bold">Your protected content</h2>
+            </div>
+            {videos.map((video) => (
+              <article key={video.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <iframe
+                  src={getEmbedUrl(video.videoUrl, video.videoProvider as never)}
+                  title={video.title}
+                  className="aspect-video w-full"
+                  allowFullScreen
+                />
+                <div className="p-5">
+                  <h3 className="font-semibold">{video.title}</h3>
+                  {video.description ? <p className="mt-2 text-sm leading-6 text-slate-600">{video.description}</p> : null}
+                </div>
+              </article>
+            ))}
+            {sections.filter((section) => section.isVisible).map((section) => (
+              <article key={section.id} className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="text-xl font-bold">{section.title}</h3>
+                {section.content.body ? (
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-700">{section.content.body}</p>
+                ) : null}
+                {section.content.items?.length ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {section.content.items.map((item, index) => (
+                      <div key={`${item.title}-${index}`} className="rounded-xl bg-slate-50 p-4">
+                        <p className="font-semibold">{item.title}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ))}
           </section>
         ) : null}
 

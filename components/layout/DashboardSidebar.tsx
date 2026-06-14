@@ -13,6 +13,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  UserRoundCheck,
 } from "lucide-react";
 
 import { OnlineSkillerLogo } from "@/components/brand/OnlineSkillerLogo";
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My pages", href: "/dashboard/pages", icon: Files },
+  { name: "Access requests", href: "/dashboard/access-requests", icon: UserRoundCheck },
   { name: "Templates", href: "/dashboard/templates", icon: LayoutTemplate },
   { name: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
   { name: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
